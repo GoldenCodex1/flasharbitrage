@@ -121,8 +121,7 @@ Deno.serve(async (req) => {
     // Update last cron run metric
     await supabase
       .from("system_runtime_metrics")
-      .update({ metric_value: new Date().toISOString(), updated_at: new Date().toISOString() })
-      .eq("metric_name", "last_cron_run");
+      .upsert({ metric_name: "last_cron_run", metric_value: new Date().toISOString(), updated_at: new Date().toISOString() }, { onConflict: "metric_name" });
 
     return new Response(
       JSON.stringify({ success: true, settlements: results }),
