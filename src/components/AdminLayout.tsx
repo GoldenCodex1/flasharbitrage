@@ -17,6 +17,7 @@ import {
   Settings,
   Lock,
   FileText,
+  Mail,
   LogOut,
   Menu,
   X,
