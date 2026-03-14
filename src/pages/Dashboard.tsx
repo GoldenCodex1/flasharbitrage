@@ -43,7 +43,7 @@ export default function Dashboard() {
     activeTradeEntries,
     recentTransactions,
   } = useDashboardData();
-  const { plan, tradesToday, activeAutoTrades } = useUserPlan();
+  const { plan, tradesToday, activeAutoTrades, planExpiresAt, daysRemaining } = useUserPlan();
   const fmtLimit = (n: number) => n >= 999999 ? "∞" : String(n);
 
   return (
