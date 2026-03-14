@@ -35,11 +35,26 @@ export default function BotControlStrip({ botActivity }: Props) {
   }, [user, queryClient]);
 
   const toggleBot = async () => {
-    if (!user || !botActivity) return;
+    if (!user) return;
+    
+    // Auto-create bot_activity row if missing
+    let currentBot = botActivity;
+    if (!currentBot) {
+      const { data: newBot } = await supabase
+        .from("bot_activity")
+        .upsert({ user_id: user.id }, { onConflict: "user_id" })
+        .select()
+        .single();
+      if (!newBot) {
+        toast.error("Failed to initialize bot");
+        return;
+      }
+      currentBot = newBot;
+      queryClient.invalidateQueries({ queryKey: ["bot-activity"] });
+    }
 
     // Validation when turning ON
-    if (!botOn) {
-      // Check balance
+    if (!currentBot.bot_enabled) {
       const { data: txns } = await supabase
         .from("transactions")
         .select("amount")
@@ -62,13 +77,13 @@ export default function BotControlStrip({ botActivity }: Props) {
 
     const { error } = await supabase
       .from("bot_activity")
-      .update({ bot_enabled: !botOn })
+      .update({ bot_enabled: !currentBot.bot_enabled })
       .eq("user_id", user.id);
     if (error) {
       toast.error("Failed to toggle bot");
     } else {
       queryClient.invalidateQueries({ queryKey: ["bot-activity"] });
-      toast.success(botOn ? "Bot deactivated" : "Bot activated");
+      toast.success(currentBot.bot_enabled ? "Bot deactivated" : "Bot activated");
     }
   };
 
