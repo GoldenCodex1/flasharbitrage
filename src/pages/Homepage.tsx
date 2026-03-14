@@ -9,6 +9,7 @@ import FaqSection from "@/components/homepage/FaqSection";
 import HomepageFooter from "@/components/homepage/HomepageFooter";
 import HomepageNav from "@/components/homepage/HomepageNav";
 import SeoHead from "@/components/homepage/SeoHead";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export default function Homepage() {
   return (
