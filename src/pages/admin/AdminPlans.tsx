@@ -32,6 +32,9 @@ const emptyPlan: Omit<Plan, "id"> = {
   daily_withdrawal_limit: 500,
   monthly_price: 0,
   is_active: true,
+  duration_days: 30,
+  upgrade_price: 0,
+  is_free_plan: false,
 };
 
 export default function AdminPlans() {
