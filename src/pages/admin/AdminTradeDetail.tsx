@@ -213,8 +213,11 @@ export default function AdminTradeDetail() {
           <h3 className="font-display font-semibold text-sm">Trade Configuration</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[
+              ["Trading Pair", (trade as any).trading_pair ?? "BTC/USDT"],
               ["ROI", `${Number(trade.roi_percent)}%`],
               ["Duration", `${Number(trade.duration_hours)}h`],
+              ["Buy Exchange", (trade as any).buy_exchange ?? "—"],
+              ["Sell Exchange", (trade as any).sell_exchange ?? "—"],
               ["Min Investment", `$${Number(trade.min_investment)}`],
               ["Max Investment", `$${Number(trade.max_investment).toLocaleString()}`],
               ["Slot Limit", `${trade.slot_limit}`],
