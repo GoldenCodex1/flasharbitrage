@@ -148,7 +148,7 @@ export default function Profile() {
     }
   };
 
-  const { plan } = useUserPlan();
+  const { plan, planStartedAt, planExpiresAt, daysRemaining } = useUserPlan();
   const kycStatus = kyc?.status ?? profile?.kyc_status ?? "pending";
   const kycBadge = kycStatus === "approved" ? "status-badge-success" : kycStatus === "rejected" ? "status-badge-danger" : "status-badge-warning";
 
