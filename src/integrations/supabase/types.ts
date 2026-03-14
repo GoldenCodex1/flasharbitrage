@@ -559,6 +559,93 @@ export type Database = {
         }
         Relationships: []
       }
+      email_queue: {
+        Row: {
+          created_at: string
+          email_type: string
+          id: string
+          processed_at: string | null
+          status: string
+          user_id: string
+          variables: Json
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          id?: string
+          processed_at?: string | null
+          status?: string
+          user_id: string
+          variables?: Json
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          id?: string
+          processed_at?: string | null
+          status?: string
+          user_id?: string
+          variables?: Json
+        }
+        Relationships: []
+      }
+      email_settings: {
+        Row: {
+          deposit_body: string
+          deposit_subject: string
+          id: string
+          notify_deposit: boolean
+          notify_settlement: boolean
+          notify_signup: boolean
+          notify_withdrawal: boolean
+          sender_email: string
+          sender_name: string
+          settlement_body: string
+          settlement_subject: string
+          signup_body: string
+          signup_subject: string
+          updated_at: string
+          withdrawal_body: string
+          withdrawal_subject: string
+        }
+        Insert: {
+          deposit_body?: string
+          deposit_subject?: string
+          id?: string
+          notify_deposit?: boolean
+          notify_settlement?: boolean
+          notify_signup?: boolean
+          notify_withdrawal?: boolean
+          sender_email?: string
+          sender_name?: string
+          settlement_body?: string
+          settlement_subject?: string
+          signup_body?: string
+          signup_subject?: string
+          updated_at?: string
+          withdrawal_body?: string
+          withdrawal_subject?: string
+        }
+        Update: {
+          deposit_body?: string
+          deposit_subject?: string
+          id?: string
+          notify_deposit?: boolean
+          notify_settlement?: boolean
+          notify_signup?: boolean
+          notify_withdrawal?: boolean
+          sender_email?: string
+          sender_name?: string
+          settlement_body?: string
+          settlement_subject?: string
+          signup_body?: string
+          signup_subject?: string
+          updated_at?: string
+          withdrawal_body?: string
+          withdrawal_subject?: string
+        }
+        Relationships: []
+      }
       engine_config: {
         Row: {
           auto_sync_interval_seconds: number
