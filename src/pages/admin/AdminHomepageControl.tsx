@@ -35,7 +35,7 @@ export default function AdminHomepageControl() {
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
-    const [statsRes, faqRes, heroRes, seoRes, pagesRes, teamRes, settingsRes] = await Promise.all([
+    const [statsRes, faqRes, heroRes, seoRes, pagesRes, teamRes, settingsRes, sectionsRes] = await Promise.all([
       supabase.from("platform_stats").select("*"),
       supabase.from("homepage_faq").select("*").order("display_order"),
       supabase.from("homepage_hero").select("*").limit(1).maybeSingle(),
@@ -43,6 +43,7 @@ export default function AdminHomepageControl() {
       supabase.from("footer_pages").select("*").order("display_order"),
       supabase.from("team_members").select("*").order("display_order"),
       supabase.from("site_settings").select("key, value"),
+      supabase.from("homepage_sections").select("*"),
     ]);
     if (statsRes.data) setStats(statsRes.data);
     if (faqRes.data) setFaqs(faqRes.data);
