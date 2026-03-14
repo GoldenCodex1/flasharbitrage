@@ -19,6 +19,32 @@ Deno.serve(async (req) => {
 
     const results: Record<string, unknown>[] = [];
 
+    // Check if engine is globally enabled
+    const { data: globalSettings } = await supabase
+      .from("bot_global_settings")
+      .select("enabled, max_concurrent_trades, max_platform_exposure, trading_window_start, trading_window_end")
+      .limit(1)
+      .single();
+
+    if (!globalSettings?.enabled) {
+      return new Response(
+        JSON.stringify({ success: true, message: "Engine globally disabled", processed: 0 }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Load all risk profile configs for ROI filtering
+    const { data: riskProfiles } = await supabase
+      .from("risk_profile_config")
+      .select("profile_name, roi_min, roi_max");
+
+    const riskMap: Record<string, { roi_min: number; roi_max: number }> = {};
+    for (const rp of riskProfiles ?? []) {
+      // Map profile_name to bot_activity risk_profile values
+      const key = rp.profile_name.toLowerCase() === "balanced" ? "moderate" : rp.profile_name.toLowerCase();
+      riskMap[key] = { roi_min: Number(rp.roi_min), roi_max: Number(rp.roi_max) };
+    }
+
     // Get all users with bot enabled
     const { data: activeBots, error: botError } = await supabase
       .from("bot_activity")
@@ -113,7 +139,6 @@ Deno.serve(async (req) => {
             .update({ bot_enabled: false })
             .eq("user_id", bot.user_id);
 
-          // Log shutdown event
           await supabase.from("bot_logs").insert({
             user_id: bot.user_id,
             action_type: "bot_stopped",
@@ -121,7 +146,6 @@ Deno.serve(async (req) => {
             new_value: shutdownReason,
           });
 
-          // Notify user
           await supabase.from("notifications").insert({
             user_id: bot.user_id,
             title: "Auto Bot Paused",
@@ -132,6 +156,10 @@ Deno.serve(async (req) => {
           results.push({ user_id: bot.user_id, action: "shutdown", reason: shutdownReason });
           continue;
         }
+
+        // Determine user's risk profile ROI range
+        const userRisk = bot.risk_profile?.toLowerCase() ?? "moderate";
+        const riskConfig = riskMap[userRisk];
 
         // Find a trade to join (one the user hasn't already joined)
         const { data: existingEntries } = await supabase
@@ -147,11 +175,16 @@ Deno.serve(async (req) => {
           if (t.slots_filled >= t.slot_limit) return false;
           if (Number(t.min_investment) > balance) return false;
           if (Number(t.min_investment) > plan.max_trade_amount) return false;
+          // Filter by risk profile ROI range
+          if (riskConfig) {
+            const tradeRoi = Number(t.roi_percent);
+            if (tradeRoi < riskConfig.roi_min || tradeRoi > riskConfig.roi_max) return false;
+          }
           return true;
         });
 
         if (!eligibleTrade) {
-          results.push({ user_id: bot.user_id, action: "no_eligible_trades" });
+          results.push({ user_id: bot.user_id, action: "no_eligible_trades", risk: userRisk });
           continue;
         }
 
@@ -192,7 +225,7 @@ Deno.serve(async (req) => {
           user_id: bot.user_id,
           action_type: "bot_trade_executed",
           category: "trade",
-          new_value: `Joined ${eligibleTrade.trading_pair ?? eligibleTrade.title} with $${tradeAmount}`,
+          new_value: `Joined ${eligibleTrade.trading_pair ?? eligibleTrade.title} (ROI: ${eligibleTrade.roi_percent}%, Risk: ${userRisk}) with $${tradeAmount}`,
         });
 
         results.push({
@@ -200,6 +233,8 @@ Deno.serve(async (req) => {
           action: "trade_joined",
           trade_id: eligibleTrade.id,
           amount: tradeAmount,
+          risk_profile: userRisk,
+          trade_roi: eligibleTrade.roi_percent,
         });
 
       } catch (userErr) {
