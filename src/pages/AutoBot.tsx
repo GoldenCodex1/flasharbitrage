@@ -96,9 +96,9 @@ export default function AutoBot() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard icon={TrendingUp} label="Today's Profit" value={`+${fmt(bot?.profit_today ?? 0)}`} className="text-success" />
-          <StatCard icon={TrendingDown} label="Today's Loss" value={`-${fmt(bot?.loss_today ?? 0)}`} className="text-destructive" />
-          <StatCard icon={BarChart3} label="Trades Today" value={String(bot?.trades_today ?? 0)} />
+          <StatCard icon={TrendingUp} label="Today's Profit" value={`+${fmt(profitToday)}`} className="text-success" />
+          <StatCard icon={TrendingDown} label="Today's Loss" value={`-${fmt(lossToday)}`} className="text-destructive" />
+          <StatCard icon={BarChart3} label="Trades Today" value={String(tradesToday)} />
           <StatCard icon={Timer} label="Daily Limit" value={String(bot?.daily_trade_limit ?? 15)} />
         </div>
       </div>
