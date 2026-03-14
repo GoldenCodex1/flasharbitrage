@@ -52,8 +52,9 @@ export default function AdminBotSettings() {
           <BotGlobalControls />
         </TabsContent>
 
-        <TabsContent value="strategy">
+        <TabsContent value="strategy" className="space-y-5">
           <BotStrategyConfig />
+          <RiskProfileConfig />
         </TabsContent>
 
         <TabsContent value="capital">
