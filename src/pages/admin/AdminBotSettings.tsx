@@ -4,6 +4,7 @@ import { LayoutDashboard, Power, Settings2, Wallet, Users, BarChart3, Activity, 
 import BotOverviewMetrics from "./bot/BotOverviewMetrics";
 import BotGlobalControls from "./bot/BotGlobalControls";
 import BotStrategyConfig from "./bot/BotStrategyConfig";
+import RiskProfileConfig from "./bot/RiskProfileConfig";
 import BotCapitalAllocation from "./bot/BotCapitalAllocation";
 import BotUserOverrides from "./bot/BotUserOverrides";
 import BotAnalytics from "./bot/BotAnalytics";
@@ -51,8 +52,9 @@ export default function AdminBotSettings() {
           <BotGlobalControls />
         </TabsContent>
 
-        <TabsContent value="strategy">
+        <TabsContent value="strategy" className="space-y-5">
           <BotStrategyConfig />
+          <RiskProfileConfig />
         </TabsContent>
 
         <TabsContent value="capital">
