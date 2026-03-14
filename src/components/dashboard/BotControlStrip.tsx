@@ -16,6 +16,7 @@ export default function BotControlStrip({ botActivity }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { plan, canTrade, canAutoTrade } = useUserPlan();
+  const { profitToday, lossToday, tradesToday } = useBotStats();
   const botOn = botActivity?.bot_enabled ?? false;
 
   // Realtime subscription for live bot updates
