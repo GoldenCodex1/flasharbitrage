@@ -30,7 +30,7 @@ export function useHomepageSection(sectionKey: string, defaults: SectionData) {
           const parsed: SectionData = {
             title: row.title,
             subtitle: row.subtitle,
-            items: (row.items as SectionItem[]) || defaults.items,
+            items: (row.items as unknown as SectionItem[]) || defaults.items,
           };
           cache[sectionKey] = parsed;
           setData(parsed);
