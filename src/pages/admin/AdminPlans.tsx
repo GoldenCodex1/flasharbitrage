@@ -70,6 +70,9 @@ export default function AdminPlans() {
       daily_withdrawal_limit: plan.daily_withdrawal_limit,
       monthly_price: plan.monthly_price,
       is_active: plan.is_active,
+      duration_days: plan.duration_days,
+      upgrade_price: plan.upgrade_price,
+      is_free_plan: plan.is_free_plan,
     });
   };
 
