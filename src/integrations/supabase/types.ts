@@ -559,6 +559,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_queue: {
+        Row: {
+          created_at: string
+          email_type: string
+          id: string
+          processed_at: string | null
+          status: string
+          user_id: string
+          variables: Json
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          id?: string
+          processed_at?: string | null
+          status?: string
+          user_id: string
+          variables?: Json
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          id?: string
+          processed_at?: string | null
+          status?: string
+          user_id?: string
+          variables?: Json
+        }
+        Relationships: []
+      }
       email_settings: {
         Row: {
           deposit_body: string
