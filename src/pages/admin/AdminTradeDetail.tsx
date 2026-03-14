@@ -135,6 +135,10 @@ export default function AdminTradeDetail() {
     }
 
     const updatePayload: any = { status: nextStatus };
+    if (nextStatus === "active") {
+      // Set expires_at based on duration_hours for automatic lifecycle
+      updatePayload.expires_at = new Date(Date.now() + Number(trade.duration_hours) * 3600000).toISOString();
+    }
     if (nextStatus === "settled" || nextStatus === "cancelled") {
       updatePayload.settlement_date = new Date().toISOString();
     }
