@@ -8,6 +8,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import AdminLayout from "@/components/AdminLayout";
 import Homepage from "@/pages/Homepage";
+import FooterPage from "@/pages/FooterPage";
+import TeamPage from "@/pages/TeamPage";
 import Dashboard from "@/pages/Dashboard";
 import Portfolio from "@/pages/Portfolio";
 import Deposit from "@/pages/Deposit";
