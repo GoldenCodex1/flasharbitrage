@@ -12,6 +12,7 @@ interface EmailSettings {
   id: string;
   sender_name: string;
   sender_email: string;
+  resend_api_key: string;
   notify_signup: boolean;
   notify_deposit: boolean;
   notify_withdrawal: boolean;
