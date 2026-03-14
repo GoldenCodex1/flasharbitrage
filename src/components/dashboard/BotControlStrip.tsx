@@ -2,6 +2,7 @@ import { Bot, Power, ShieldAlert, TrendingUp, TrendingDown, BarChart3, Timer } f
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
+import { useUserPlan } from "@/hooks/useUserPlan";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import type { Tables } from "@/integrations/supabase/types";
@@ -13,6 +14,7 @@ interface Props {
 export default function BotControlStrip({ botActivity }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { plan, canTrade, canAutoTrade } = useUserPlan();
   const botOn = botActivity?.bot_enabled ?? false;
 
   // Realtime subscription for live bot updates
@@ -34,6 +36,30 @@ export default function BotControlStrip({ botActivity }: Props) {
 
   const toggleBot = async () => {
     if (!user || !botActivity) return;
+
+    // Validation when turning ON
+    if (!botOn) {
+      // Check balance
+      const { data: txns } = await supabase
+        .from("transactions")
+        .select("amount")
+        .eq("user_id", user.id);
+      const balance = txns?.reduce((sum, t) => sum + Number(t.amount), 0) ?? 0;
+
+      if (balance < 1) {
+        toast.error("Insufficient balance to activate auto bot.");
+        return;
+      }
+      if (plan && !canTrade) {
+        toast.error("Auto bot paused: daily trade limit reached.");
+        return;
+      }
+      if (plan && !canAutoTrade) {
+        toast.error("Auto bot paused: auto trade slot limit reached.");
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from("bot_activity")
       .update({ bot_enabled: !botOn })

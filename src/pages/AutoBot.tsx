@@ -22,14 +22,25 @@ export default function AutoBot() {
   const toggleBot = async () => {
     if (!user || !bot) return;
 
-    // If turning ON, check plan limits
-    if (!bot.bot_enabled && plan) {
-      if (!canTrade) {
-        toast.error("Auto bot paused because your plan trading limits were reached.");
+    // If turning ON, validate everything
+    if (!bot.bot_enabled) {
+      // Check balance
+      const { data: txns } = await supabase
+        .from("transactions")
+        .select("amount")
+        .eq("user_id", user.id);
+      const balance = txns?.reduce((sum, t) => sum + Number(t.amount), 0) ?? 0;
+
+      if (balance < 1) {
+        toast.error("Insufficient balance to activate auto bot.");
         return;
       }
-      if (!canAutoTrade) {
-        toast.error("Auto bot paused because your plan auto trade slot limit was reached.");
+      if (plan && !canTrade) {
+        toast.error("Auto bot paused: daily trade limit reached.");
+        return;
+      }
+      if (plan && !canAutoTrade) {
+        toast.error("Auto bot paused: auto trade slot limit reached.");
         return;
       }
     }
