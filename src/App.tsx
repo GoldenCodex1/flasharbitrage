@@ -8,6 +8,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import AdminLayout from "@/components/AdminLayout";
 import Homepage from "@/pages/Homepage";
+import FooterPage from "@/pages/FooterPage";
+import TeamPage from "@/pages/TeamPage";
 import Dashboard from "@/pages/Dashboard";
 import Portfolio from "@/pages/Portfolio";
 import Deposit from "@/pages/Deposit";
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/" element={<Homepage />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/page/:slug" element={<FooterPage />} />
+            <Route path="/team" element={<TeamPage />} />
 
             {/* Protected User Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
