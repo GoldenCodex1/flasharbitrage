@@ -18,6 +18,9 @@ interface Plan {
   daily_withdrawal_limit: number;
   monthly_price: number;
   is_active: boolean;
+  duration_days: number | null;
+  upgrade_price: number;
+  is_free_plan: boolean;
 }
 
 const emptyPlan: Omit<Plan, "id"> = {
