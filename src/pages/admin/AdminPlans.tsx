@@ -147,6 +147,8 @@ export default function AdminPlans() {
               <div className="flex justify-between"><span className="text-muted-foreground">Max Trade Amount</span><span>${fmt(plan.max_trade_amount)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Auto Bot Slots</span><span>{fmt(plan.max_auto_trade_slots)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Daily Withdrawal</span><span>${fmt(plan.daily_withdrawal_limit)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Duration</span><span>{plan.duration_days ? `${plan.duration_days} days` : "Unlimited"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Upgrade Price</span><span>${Number(plan.upgrade_price).toFixed(2)}</span></div>
             </div>
 
             <div className="flex gap-2 mt-auto pt-3 border-t border-border/30">
