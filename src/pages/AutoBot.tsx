@@ -4,12 +4,14 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useBotStats } from "@/hooks/useBotStats";
 import { toast } from "sonner";
 
 export default function AutoBot() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { plan, canTrade, canAutoTrade, tradesToday, activeAutoTrades } = useUserPlan();
+  const { plan, canTrade, canAutoTrade, tradesToday: planTradesToday, activeAutoTrades } = useUserPlan();
+  const { profitToday, lossToday, tradesToday } = useBotStats();
   const { data: bot } = useQuery({
     queryKey: ["bot-activity", user?.id],
     queryFn: async () => {
@@ -94,9 +96,9 @@ export default function AutoBot() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard icon={TrendingUp} label="Today's Profit" value={`+${fmt(bot?.profit_today ?? 0)}`} className="text-success" />
-          <StatCard icon={TrendingDown} label="Today's Loss" value={`-${fmt(bot?.loss_today ?? 0)}`} className="text-destructive" />
-          <StatCard icon={BarChart3} label="Trades Today" value={String(bot?.trades_today ?? 0)} />
+          <StatCard icon={TrendingUp} label="Today's Profit" value={`+${fmt(profitToday)}`} className="text-success" />
+          <StatCard icon={TrendingDown} label="Today's Loss" value={`-${fmt(lossToday)}`} className="text-destructive" />
+          <StatCard icon={BarChart3} label="Trades Today" value={String(tradesToday)} />
           <StatCard icon={Timer} label="Daily Limit" value={String(bot?.daily_trade_limit ?? 15)} />
         </div>
       </div>
@@ -108,7 +110,7 @@ export default function AutoBot() {
           <div>
             <p className="text-sm font-medium text-warning">Plan Limits Reached</p>
             <p className="text-xs text-muted-foreground">
-              {!canTrade ? `Daily trade limit reached (${tradesToday}/${plan.max_trades_per_day}). ` : ""}
+              {!canTrade ? `Daily trade limit reached (${planTradesToday}/${plan.max_trades_per_day}). ` : ""}
               {!canAutoTrade ? `Auto bot slot limit reached (${activeAutoTrades}/${plan.max_auto_trade_slots}). ` : ""}
               Upgrade your plan for higher limits.
             </p>
