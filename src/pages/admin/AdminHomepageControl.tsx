@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, BarChart3, HelpCircle, Type, Search, Image, Globe, Users, Upload, FileText } from "lucide-react";
+import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, BarChart3, HelpCircle, Type, Search, Image, Globe, Users, Upload, FileText, LayoutGrid } from "lucide-react";
 
 /* ─── types ─── */
 interface Stat { id: string; key: string; value: string; label: string; auto_calculate: boolean; }
@@ -16,6 +16,8 @@ interface HeroContent { id: string; headline: string; subheadline: string; prima
 interface SeoMeta { id: string; meta_title: string; meta_description: string; og_title: string; og_description: string; og_image: string; keywords: string; }
 interface FooterPage { id: string; title: string; slug: string; content: string; is_visible: boolean; display_order: number; }
 interface TeamMember { id: string; name: string; role: string; bio: string; photo_url: string | null; display_order: number; is_visible: boolean; }
+interface SectionData { id: string; section_key: string; title: string; subtitle: string; items: SectionItem[]; }
+interface SectionItem { icon: string; title: string; desc: string; }
 
 export default function AdminHomepageControl() {
   const [stats, setStats] = useState<Stat[]>([]);
@@ -26,13 +28,14 @@ export default function AdminHomepageControl() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [logoUrl, setLogoUrl] = useState("");
   const [faviconUrl, setFaviconUrl] = useState("");
+  const [sections, setSections] = useState<SectionData[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("branding");
 
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
-    const [statsRes, faqRes, heroRes, seoRes, pagesRes, teamRes, settingsRes] = await Promise.all([
+    const [statsRes, faqRes, heroRes, seoRes, pagesRes, teamRes, settingsRes, sectionsRes] = await Promise.all([
       supabase.from("platform_stats").select("*"),
       supabase.from("homepage_faq").select("*").order("display_order"),
       supabase.from("homepage_hero").select("*").limit(1).maybeSingle(),
@@ -40,6 +43,7 @@ export default function AdminHomepageControl() {
       supabase.from("footer_pages").select("*").order("display_order"),
       supabase.from("team_members").select("*").order("display_order"),
       supabase.from("site_settings").select("key, value"),
+      supabase.from("homepage_sections").select("*"),
     ]);
     if (statsRes.data) setStats(statsRes.data);
     if (faqRes.data) setFaqs(faqRes.data);
@@ -47,6 +51,7 @@ export default function AdminHomepageControl() {
     if (seoRes.data) setSeo(seoRes.data);
     if (pagesRes.data) setFooterPages(pagesRes.data);
     if (teamRes.data) setTeamMembers(teamRes.data);
+    if (sectionsRes.data) setSections(sectionsRes.data.map((s: any) => ({ ...s, items: (s.items as unknown as SectionItem[]) || [] })));
     if (settingsRes.data) {
       settingsRes.data.forEach((s: any) => {
         if (s.key === "logo_url") setLogoUrl(s.value);
@@ -164,9 +169,35 @@ export default function AdminHomepageControl() {
     }
   };
 
+  /* ── Section helpers ── */
+  const saveSection = async (sec: SectionData) => {
+    setSaving(sec.id);
+    const { error } = await supabase.from("homepage_sections").update({ title: sec.title, subtitle: sec.subtitle, items: sec.items as any }).eq("id", sec.id);
+    setSaving(null);
+    if (error) toast.error("Failed to save section"); else toast.success("Section updated");
+  };
+  const updateSectionItem = (sectionId: string, itemIndex: number, field: keyof SectionItem, value: string) => {
+    setSections((s) => s.map((sec) => sec.id === sectionId ? { ...sec, items: sec.items.map((item, i) => i === itemIndex ? { ...item, [field]: value } : item) } : sec));
+  };
+  const addSectionItem = (sectionId: string) => {
+    setSections((s) => s.map((sec) => sec.id === sectionId ? { ...sec, items: [...sec.items, { icon: "Zap", title: "New Item", desc: "Description..." }] } : sec));
+  };
+  const removeSectionItem = (sectionId: string, itemIndex: number) => {
+    setSections((s) => s.map((sec) => sec.id === sectionId ? { ...sec, items: sec.items.filter((_, i) => i !== itemIndex) } : sec));
+  };
+
+  const sectionLabels: Record<string, string> = {
+    how_it_works: "How It Works",
+    why_choose: "Why Choose",
+    technology: "Technology",
+    referral: "Referral",
+    security: "Security",
+  };
+
   const tabs = [
     { key: "branding", label: "Branding", icon: Image },
     { key: "hero", label: "Hero", icon: Type },
+    { key: "sections", label: "Sections", icon: LayoutGrid },
     { key: "stats", label: "Stats", icon: BarChart3 },
     { key: "faq", label: "FAQ", icon: HelpCircle },
     { key: "pages", label: "Pages", icon: FileText },
@@ -266,6 +297,62 @@ export default function AdminHomepageControl() {
               <Button onClick={saveHero} disabled={saving === "hero"}><Save className="w-4 h-4 mr-2" /> Save Hero</Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── SECTIONS ── */}
+      {activeTab === "sections" && (
+        <div className="space-y-6">
+          {sections.map((sec) => (
+            <div key={sec.id} className="glass-card p-5 sm:p-6 space-y-4">
+              <h3 className="flex items-center gap-2 text-lg font-display font-semibold">
+                <LayoutGrid className="w-5 h-5 text-primary" /> {sectionLabels[sec.section_key] || sec.section_key}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Section Title</Label>
+                  <Input value={sec.title} onChange={(e) => setSections((s) => s.map((x) => x.id === sec.id ? { ...x, title: e.target.value } : x))} />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Section Subtitle</Label>
+                  <Input value={sec.subtitle} onChange={(e) => setSections((s) => s.map((x) => x.id === sec.id ? { ...x, subtitle: e.target.value } : x))} />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Items</Label>
+                  <Button size="sm" variant="outline" onClick={() => addSectionItem(sec.id)}><Plus className="w-3.5 h-3.5 mr-1" /> Add Item</Button>
+                </div>
+                {sec.items.map((item, idx) => (
+                  <div key={idx} className="rounded-lg border border-border/40 bg-card/50 p-3 space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-[10px] text-muted-foreground mb-0.5 block">Icon</Label>
+                        <Input value={item.icon} onChange={(e) => updateSectionItem(sec.id, idx, "icon", e.target.value)} className="text-xs" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <Label className="text-[10px] text-muted-foreground mb-0.5 block">Title</Label>
+                        <Input value={item.title} onChange={(e) => updateSectionItem(sec.id, idx, "title", e.target.value)} className="text-xs" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Label className="text-[10px] text-muted-foreground mb-0.5 block">Description</Label>
+                        <Input value={item.desc} onChange={(e) => updateSectionItem(sec.id, idx, "desc", e.target.value)} className="text-xs" />
+                      </div>
+                      <Button size="sm" variant="ghost" className="text-destructive self-end" onClick={() => removeSectionItem(sec.id, idx)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end">
+                <Button size="sm" onClick={() => saveSection(sec)} disabled={saving === sec.id}><Save className="w-3.5 h-3.5 mr-1" /> Save Section</Button>
+              </div>
+            </div>
+          ))}
+          {sections.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No sections found.</p>}
         </div>
       )}
 

@@ -673,6 +673,33 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_sections: {
+        Row: {
+          id: string
+          items: Json
+          section_key: string
+          subtitle: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          items?: Json
+          section_key: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          items?: Json
+          section_key?: string
+          subtitle?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       homepage_seo: {
         Row: {
           id: string
