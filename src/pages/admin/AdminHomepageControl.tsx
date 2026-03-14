@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, BarChart3, HelpCircle, Type, Search, Image, Globe, Users, Upload, FileText } from "lucide-react";
+import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, BarChart3, HelpCircle, Type, Search, Image, Globe, Users, Upload, FileText, LayoutGrid } from "lucide-react";
 
 /* ─── types ─── */
 interface Stat { id: string; key: string; value: string; label: string; auto_calculate: boolean; }
