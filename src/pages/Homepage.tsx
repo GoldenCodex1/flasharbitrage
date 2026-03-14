@@ -12,6 +12,7 @@ import SeoHead from "@/components/homepage/SeoHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 export default function Homepage() {
+  useSiteSettings(); // Apply favicon globally
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <SeoHead />
