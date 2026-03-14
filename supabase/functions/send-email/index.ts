@@ -100,12 +100,12 @@ Deno.serve(async (req) => {
       body = body.replace(regex, value);
     }
 
-    // Get Resend API key
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    // Get Resend API key — prefer DB setting, fallback to env
+    const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
-      console.error("RESEND_API_KEY not set");
+      console.error("RESEND_API_KEY not configured");
       return new Response(
-        JSON.stringify({ error: "Email provider not configured. Add RESEND_API_KEY in secrets." }),
+        JSON.stringify({ error: "Resend API key not configured. Add it in Admin → Email & Notifications." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

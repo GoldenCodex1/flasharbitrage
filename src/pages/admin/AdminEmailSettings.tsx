@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Save, Loader2, Mail, Send, TestTube } from "lucide-react";
+import { Save, Loader2, Mail, Send, TestTube, Key, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -12,6 +12,7 @@ interface EmailSettings {
   id: string;
   sender_name: string;
   sender_email: string;
+  resend_api_key: string;
   notify_signup: boolean;
   notify_deposit: boolean;
   notify_withdrawal: boolean;
@@ -37,6 +38,7 @@ export default function AdminEmailSettings() {
   const [data, setData] = useState<EmailSettings | null>(null);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -111,6 +113,33 @@ export default function AdminEmailSettings() {
             Save
           </Button>
         </div>
+      </div>
+
+      {/* Resend API Key */}
+      <div className="glass-card p-5 sm:p-6 space-y-4">
+        <h3 className="font-display font-semibold text-base sm:text-lg flex items-center gap-2">
+          <Key className="w-4 h-4 text-primary" /> Resend API Key
+        </h3>
+        <p className="text-xs text-muted-foreground">Enter your Resend API key to enable email sending. Get one at <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">resend.com</a>.</p>
+        <div className="relative max-w-md">
+          <Input
+            type={showApiKey ? "text" : "password"}
+            value={data.resend_api_key}
+            onChange={(e) => update("resend_api_key", e.target.value)}
+            className="bg-secondary/50 border-border/30 text-sm pr-10"
+            placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          />
+          <button
+            type="button"
+            onClick={() => setShowApiKey(!showApiKey)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
+        {!data.resend_api_key && (
+          <p className="text-[10px] text-destructive">⚠ No API key configured — emails will not be sent.</p>
+        )}
       </div>
 
       {/* Sender Identity */}
