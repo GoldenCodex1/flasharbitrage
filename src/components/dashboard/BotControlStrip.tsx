@@ -126,9 +126,9 @@ export default function BotControlStrip({ botActivity }: Props) {
         </div>
 
         <div className="flex items-center gap-6 flex-wrap ml-auto">
-          <Stat icon={TrendingUp} label="Today's Profit" value={`+${fmt(botActivity?.profit_today ?? 0)}`} className="text-success" />
-          <Stat icon={TrendingDown} label="Today's Loss" value={`-${fmt(botActivity?.loss_today ?? 0)}`} className="text-destructive" />
-          <Stat icon={BarChart3} label="Trades Today" value={String(botActivity?.trades_today ?? 0)} />
+          <Stat icon={TrendingUp} label="Today's Profit" value={`+${fmt(profitToday)}`} className="text-success" />
+          <Stat icon={TrendingDown} label="Today's Loss" value={`-${fmt(lossToday)}`} className="text-destructive" />
+          <Stat icon={BarChart3} label="Trades Today" value={String(tradesToday)} />
           <Stat icon={Timer} label="Daily Limit" value={String(botActivity?.daily_trade_limit ?? 15)} />
         </div>
       </div>

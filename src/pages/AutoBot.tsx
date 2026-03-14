@@ -110,7 +110,7 @@ export default function AutoBot() {
           <div>
             <p className="text-sm font-medium text-warning">Plan Limits Reached</p>
             <p className="text-xs text-muted-foreground">
-              {!canTrade ? `Daily trade limit reached (${tradesToday}/${plan.max_trades_per_day}). ` : ""}
+              {!canTrade ? `Daily trade limit reached (${planTradesToday}/${plan.max_trades_per_day}). ` : ""}
               {!canAutoTrade ? `Auto bot slot limit reached (${activeAutoTrades}/${plan.max_auto_trade_slots}). ` : ""}
               Upgrade your plan for higher limits.
             </p>
