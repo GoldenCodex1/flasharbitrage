@@ -23,7 +23,7 @@ export default function HeroSection() {
   const [hero, setHero] = useState<HeroData>(defaults);
 
   useEffect(() => {
-    supabase.from("homepage_hero").select("*").limit(1).single().then(({ data }) => {
+    supabase.from("homepage_hero").select("*").limit(1).maybeSingle().then(({ data }) => {
       if (data) setHero(data);
     });
   }, []);
