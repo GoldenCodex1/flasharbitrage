@@ -598,6 +598,7 @@ export type Database = {
           notify_settlement: boolean
           notify_signup: boolean
           notify_withdrawal: boolean
+          resend_api_key: string
           sender_email: string
           sender_name: string
           settlement_body: string
@@ -616,6 +617,7 @@ export type Database = {
           notify_settlement?: boolean
           notify_signup?: boolean
           notify_withdrawal?: boolean
+          resend_api_key?: string
           sender_email?: string
           sender_name?: string
           settlement_body?: string
@@ -634,6 +636,7 @@ export type Database = {
           notify_settlement?: boolean
           notify_signup?: boolean
           notify_withdrawal?: boolean
+          resend_api_key?: string
           sender_email?: string
           sender_name?: string
           settlement_body?: string
