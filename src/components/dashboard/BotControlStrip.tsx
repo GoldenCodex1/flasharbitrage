@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useBotStats } from "@/hooks/useBotStats";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import type { Tables } from "@/integrations/supabase/types";
