@@ -300,6 +300,62 @@ export default function AdminHomepageControl() {
         </div>
       )}
 
+      {/* ── SECTIONS ── */}
+      {activeTab === "sections" && (
+        <div className="space-y-6">
+          {sections.map((sec) => (
+            <div key={sec.id} className="glass-card p-5 sm:p-6 space-y-4">
+              <h3 className="flex items-center gap-2 text-lg font-display font-semibold">
+                <LayoutGrid className="w-5 h-5 text-primary" /> {sectionLabels[sec.section_key] || sec.section_key}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Section Title</Label>
+                  <Input value={sec.title} onChange={(e) => setSections((s) => s.map((x) => x.id === sec.id ? { ...x, title: e.target.value } : x))} />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">Section Subtitle</Label>
+                  <Input value={sec.subtitle} onChange={(e) => setSections((s) => s.map((x) => x.id === sec.id ? { ...x, subtitle: e.target.value } : x))} />
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Items</Label>
+                  <Button size="sm" variant="outline" onClick={() => addSectionItem(sec.id)}><Plus className="w-3.5 h-3.5 mr-1" /> Add Item</Button>
+                </div>
+                {sec.items.map((item, idx) => (
+                  <div key={idx} className="rounded-lg border border-border/40 bg-card/50 p-3 space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-[10px] text-muted-foreground mb-0.5 block">Icon</Label>
+                        <Input value={item.icon} onChange={(e) => updateSectionItem(sec.id, idx, "icon", e.target.value)} className="text-xs" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <Label className="text-[10px] text-muted-foreground mb-0.5 block">Title</Label>
+                        <Input value={item.title} onChange={(e) => updateSectionItem(sec.id, idx, "title", e.target.value)} className="text-xs" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Label className="text-[10px] text-muted-foreground mb-0.5 block">Description</Label>
+                        <Input value={item.desc} onChange={(e) => updateSectionItem(sec.id, idx, "desc", e.target.value)} className="text-xs" />
+                      </div>
+                      <Button size="sm" variant="ghost" className="text-destructive self-end" onClick={() => removeSectionItem(sec.id, idx)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end">
+                <Button size="sm" onClick={() => saveSection(sec)} disabled={saving === sec.id}><Save className="w-3.5 h-3.5 mr-1" /> Save Section</Button>
+              </div>
+            </div>
+          ))}
+          {sections.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No sections found.</p>}
+        </div>
+      )}
+
       {/* ── STATS ── */}
       {activeTab === "stats" && (
         <div className="glass-card p-5 sm:p-6 space-y-4">
