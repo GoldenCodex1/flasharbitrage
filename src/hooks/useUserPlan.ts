@@ -11,17 +11,20 @@ export interface UserPlan {
   max_auto_trade_slots: number;
   daily_withdrawal_limit: number;
   monthly_price: number;
+  duration_days: number | null;
+  upgrade_price: number;
+  is_free_plan: boolean;
 }
 
 export function useUserPlan() {
   const { user } = useAuth();
 
-  const { data: plan, isLoading } = useQuery({
+  const { data: profilePlan, isLoading } = useQuery({
     queryKey: ["user-plan", user?.id],
     queryFn: async () => {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("plan_id")
+        .select("plan_id, plan_started_at, plan_expires_at")
         .eq("user_id", user!.id)
         .maybeSingle();
 
@@ -33,10 +36,22 @@ export function useUserPlan() {
         .eq("id", profile.plan_id)
         .maybeSingle();
 
-      return planData as UserPlan | null;
+      return {
+        plan: planData as UserPlan | null,
+        plan_started_at: profile.plan_started_at as string | null,
+        plan_expires_at: profile.plan_expires_at as string | null,
+      };
     },
     enabled: !!user,
   });
+
+  const plan = profilePlan?.plan ?? null;
+  const planStartedAt = profilePlan?.plan_started_at ?? null;
+  const planExpiresAt = profilePlan?.plan_expires_at ?? null;
+
+  const daysRemaining = planExpiresAt
+    ? Math.max(0, Math.ceil((new Date(planExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+    : null;
 
   const { data: tradesToday } = useQuery({
     queryKey: ["trades-today-count", user?.id],
@@ -69,6 +84,9 @@ export function useUserPlan() {
   return {
     plan,
     isLoading,
+    planStartedAt,
+    planExpiresAt,
+    daysRemaining,
     tradesToday: tradesToday ?? 0,
     activeAutoTrades: activeAutoTrades ?? 0,
     canTrade: plan ? (tradesToday ?? 0) < plan.max_trades_per_day : false,

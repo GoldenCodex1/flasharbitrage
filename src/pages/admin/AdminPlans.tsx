@@ -18,6 +18,9 @@ interface Plan {
   daily_withdrawal_limit: number;
   monthly_price: number;
   is_active: boolean;
+  duration_days: number | null;
+  upgrade_price: number;
+  is_free_plan: boolean;
 }
 
 const emptyPlan: Omit<Plan, "id"> = {
@@ -29,6 +32,9 @@ const emptyPlan: Omit<Plan, "id"> = {
   daily_withdrawal_limit: 500,
   monthly_price: 0,
   is_active: true,
+  duration_days: 30,
+  upgrade_price: 0,
+  is_free_plan: false,
 };
 
 export default function AdminPlans() {
@@ -64,6 +70,9 @@ export default function AdminPlans() {
       daily_withdrawal_limit: plan.daily_withdrawal_limit,
       monthly_price: plan.monthly_price,
       is_active: plan.is_active,
+      duration_days: plan.duration_days,
+      upgrade_price: plan.upgrade_price,
+      is_free_plan: plan.is_free_plan,
     });
   };
 
@@ -138,6 +147,8 @@ export default function AdminPlans() {
               <div className="flex justify-between"><span className="text-muted-foreground">Max Trade Amount</span><span>${fmt(plan.max_trade_amount)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Auto Bot Slots</span><span>{fmt(plan.max_auto_trade_slots)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Daily Withdrawal</span><span>${fmt(plan.daily_withdrawal_limit)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Duration</span><span>{plan.duration_days ? `${plan.duration_days} days` : "Unlimited"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Upgrade Price</span><span>${Number(plan.upgrade_price).toFixed(2)}</span></div>
             </div>
 
             <div className="flex gap-2 mt-auto pt-3 border-t border-border/30">
@@ -191,11 +202,25 @@ export default function AdminPlans() {
               <label className="text-xs text-muted-foreground mb-1.5 block">Daily Withdrawal Limit ($)</label>
               <input type="number" value={form.daily_withdrawal_limit} onChange={(e) => setForm({ ...form, daily_withdrawal_limit: Number(e.target.value) })} className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground" />
             </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Duration (days, 0 = unlimited)</label>
+              <input type="number" value={form.duration_days ?? 0} onChange={(e) => setForm({ ...form, duration_days: Number(e.target.value) || null })} className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Upgrade Price ($)</label>
+              <input type="number" value={form.upgrade_price} onChange={(e) => setForm({ ...form, upgrade_price: Number(e.target.value) })} className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground" />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
-            <label className="text-sm">Active</label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
+              <label className="text-sm">Active</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={form.is_free_plan} onChange={(e) => setForm({ ...form, is_free_plan: e.target.checked })} className="rounded" />
+              <label className="text-sm">Free Plan (no payment required)</label>
+            </div>
           </div>
 
           <div className="flex gap-3">

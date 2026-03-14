@@ -768,40 +768,49 @@ export type Database = {
           created_at: string
           daily_withdrawal_limit: number
           description: string
+          duration_days: number | null
           id: string
           is_active: boolean
+          is_free_plan: boolean
           max_auto_trade_slots: number
           max_trade_amount: number
           max_trades_per_day: number
           monthly_price: number
           name: string
           updated_at: string
+          upgrade_price: number
         }
         Insert: {
           created_at?: string
           daily_withdrawal_limit?: number
           description?: string
+          duration_days?: number | null
           id?: string
           is_active?: boolean
+          is_free_plan?: boolean
           max_auto_trade_slots?: number
           max_trade_amount?: number
           max_trades_per_day?: number
           monthly_price?: number
           name: string
           updated_at?: string
+          upgrade_price?: number
         }
         Update: {
           created_at?: string
           daily_withdrawal_limit?: number
           description?: string
+          duration_days?: number | null
           id?: string
           is_active?: boolean
+          is_free_plan?: boolean
           max_auto_trade_slots?: number
           max_trade_amount?: number
           max_trades_per_day?: number
           monthly_price?: number
           name?: string
           updated_at?: string
+          upgrade_price?: number
         }
         Relationships: []
       }
@@ -1559,6 +1568,7 @@ export type Database = {
         Returns: Json
       }
       auto_transition_trades: { Args: never; Returns: Json }
+      expire_plans: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1567,6 +1577,10 @@ export type Database = {
         Returns: boolean
       }
       settle_trade: { Args: { _trade_id: string }; Returns: Json }
+      upgrade_plan: {
+        Args: { _plan_id: string; _user_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "user"

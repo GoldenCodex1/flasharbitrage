@@ -43,7 +43,7 @@ export default function Dashboard() {
     activeTradeEntries,
     recentTransactions,
   } = useDashboardData();
-  const { plan, tradesToday, activeAutoTrades } = useUserPlan();
+  const { plan, tradesToday, activeAutoTrades, planExpiresAt, daysRemaining } = useUserPlan();
   const fmtLimit = (n: number) => n >= 999999 ? "∞" : String(n);
 
   return (
@@ -76,6 +76,9 @@ export default function Dashboard() {
               <div className="text-center"><p className="text-muted-foreground">Trades</p><p className="font-semibold">{tradesToday}/{fmtLimit(plan.max_trades_per_day)}</p></div>
               <div className="text-center"><p className="text-muted-foreground">Bot Slots</p><p className="font-semibold">{activeAutoTrades}/{fmtLimit(plan.max_auto_trade_slots)}</p></div>
               <div className="text-center"><p className="text-muted-foreground">Max Trade</p><p className="font-semibold">${Number(plan.max_trade_amount).toLocaleString()}</p></div>
+              {planExpiresAt && (
+                <div className="text-center"><p className="text-muted-foreground">Expires</p><p className="font-semibold">{daysRemaining !== null ? `${daysRemaining}d` : "—"}</p></div>
+              )}
               <Link to="/plans" className="px-3 py-1 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors hidden sm:block">Upgrade</Link>
             </div>
           </div>

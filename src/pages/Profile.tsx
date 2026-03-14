@@ -148,7 +148,7 @@ export default function Profile() {
     }
   };
 
-  const { plan } = useUserPlan();
+  const { plan, planStartedAt, planExpiresAt, daysRemaining } = useUserPlan();
   const kycStatus = kyc?.status ?? profile?.kyc_status ?? "pending";
   const kycBadge = kycStatus === "approved" ? "status-badge-success" : kycStatus === "rejected" ? "status-badge-danger" : "status-badge-warning";
 
@@ -221,6 +221,14 @@ export default function Profile() {
             <div className="flex justify-between p-2 bg-secondary/50 rounded-lg"><span className="text-muted-foreground">Max Trade Amount</span><span className="font-semibold">${fmtLimit(plan.max_trade_amount)}</span></div>
             <div className="flex justify-between p-2 bg-secondary/50 rounded-lg"><span className="text-muted-foreground">Auto Bot Slots</span><span className="font-semibold">{fmtLimit(plan.max_auto_trade_slots)}</span></div>
             <div className="flex justify-between p-2 bg-secondary/50 rounded-lg"><span className="text-muted-foreground">Daily Withdrawal</span><span className="font-semibold">${fmtLimit(plan.daily_withdrawal_limit)}</span></div>
+            {planStartedAt && (
+              <div className="flex justify-between p-2 bg-secondary/50 rounded-lg"><span className="text-muted-foreground">Started</span><span className="font-semibold">{new Date(planStartedAt).toLocaleDateString()}</span></div>
+            )}
+            {planExpiresAt ? (
+              <div className="flex justify-between p-2 bg-secondary/50 rounded-lg"><span className="text-muted-foreground">Expires</span><span className="font-semibold">{daysRemaining !== null ? `${daysRemaining} days` : "—"}</span></div>
+            ) : (
+              <div className="flex justify-between p-2 bg-secondary/50 rounded-lg"><span className="text-muted-foreground">Duration</span><span className="font-semibold">Unlimited</span></div>
+            )}
           </div>
         </div>
       )}
