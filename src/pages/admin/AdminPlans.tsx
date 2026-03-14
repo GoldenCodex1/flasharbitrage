@@ -202,11 +202,25 @@ export default function AdminPlans() {
               <label className="text-xs text-muted-foreground mb-1.5 block">Daily Withdrawal Limit ($)</label>
               <input type="number" value={form.daily_withdrawal_limit} onChange={(e) => setForm({ ...form, daily_withdrawal_limit: Number(e.target.value) })} className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground" />
             </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Duration (days, 0 = unlimited)</label>
+              <input type="number" value={form.duration_days ?? 0} onChange={(e) => setForm({ ...form, duration_days: Number(e.target.value) || null })} className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1.5 block">Upgrade Price ($)</label>
+              <input type="number" value={form.upgrade_price} onChange={(e) => setForm({ ...form, upgrade_price: Number(e.target.value) })} className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground" />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
-            <label className="text-sm">Active</label>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} className="rounded" />
+              <label className="text-sm">Active</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" checked={form.is_free_plan} onChange={(e) => setForm({ ...form, is_free_plan: e.target.checked })} className="rounded" />
+              <label className="text-sm">Free Plan (no payment required)</label>
+            </div>
           </div>
 
           <div className="flex gap-3">
