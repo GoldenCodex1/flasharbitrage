@@ -51,6 +51,7 @@ export default function BotControlStrip({ botActivity }: Props) {
       }
       currentBot = newBot;
       queryClient.invalidateQueries({ queryKey: ["bot-activity"] });
+    }
 
     // Validation when turning ON
     if (!currentBot.bot_enabled) {
