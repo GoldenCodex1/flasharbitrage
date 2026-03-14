@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import SiteLogo from "@/components/SiteLogo";
 
 export default function HomepageNav() {
   const [open, setOpen] = useState(false);
