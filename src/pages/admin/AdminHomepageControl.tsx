@@ -169,9 +169,35 @@ export default function AdminHomepageControl() {
     }
   };
 
+  /* ── Section helpers ── */
+  const saveSection = async (sec: SectionData) => {
+    setSaving(sec.id);
+    const { error } = await supabase.from("homepage_sections").update({ title: sec.title, subtitle: sec.subtitle, items: sec.items as any }).eq("id", sec.id);
+    setSaving(null);
+    if (error) toast.error("Failed to save section"); else toast.success("Section updated");
+  };
+  const updateSectionItem = (sectionId: string, itemIndex: number, field: keyof SectionItem, value: string) => {
+    setSections((s) => s.map((sec) => sec.id === sectionId ? { ...sec, items: sec.items.map((item, i) => i === itemIndex ? { ...item, [field]: value } : item) } : sec));
+  };
+  const addSectionItem = (sectionId: string) => {
+    setSections((s) => s.map((sec) => sec.id === sectionId ? { ...sec, items: [...sec.items, { icon: "Zap", title: "New Item", desc: "Description..." }] } : sec));
+  };
+  const removeSectionItem = (sectionId: string, itemIndex: number) => {
+    setSections((s) => s.map((sec) => sec.id === sectionId ? { ...sec, items: sec.items.filter((_, i) => i !== itemIndex) } : sec));
+  };
+
+  const sectionLabels: Record<string, string> = {
+    how_it_works: "How It Works",
+    why_choose: "Why Choose",
+    technology: "Technology",
+    referral: "Referral",
+    security: "Security",
+  };
+
   const tabs = [
     { key: "branding", label: "Branding", icon: Image },
     { key: "hero", label: "Hero", icon: Type },
+    { key: "sections", label: "Sections", icon: LayoutGrid },
     { key: "stats", label: "Stats", icon: BarChart3 },
     { key: "faq", label: "FAQ", icon: HelpCircle },
     { key: "pages", label: "Pages", icon: FileText },
