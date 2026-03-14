@@ -1,10 +1,1 @@
-project_id = "zwxbyrbfngfbteboqkmt"
-
-[functions.totp]
-verify_jwt = false
-
-[functions.settle-trades]
-verify_jwt = false
-
-[functions.nowpayments-webhook]
-verify_jwt = false
+project_id = "hsczenoqhixqqeyxwsbe"
