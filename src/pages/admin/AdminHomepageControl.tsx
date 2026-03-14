@@ -51,6 +51,7 @@ export default function AdminHomepageControl() {
     if (seoRes.data) setSeo(seoRes.data);
     if (pagesRes.data) setFooterPages(pagesRes.data);
     if (teamRes.data) setTeamMembers(teamRes.data);
+    if (sectionsRes.data) setSections(sectionsRes.data.map((s: any) => ({ ...s, items: (s.items as unknown as SectionItem[]) || [] })));
     if (settingsRes.data) {
       settingsRes.data.forEach((s: any) => {
         if (s.key === "logo_url") setLogoUrl(s.value);
