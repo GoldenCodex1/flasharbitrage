@@ -37,6 +37,7 @@ const adminNavItems = [
   { label: "Wallet Settings", path: "/admin/wallets", icon: Wallet },
   { label: "API & Gateways", path: "/admin/api", icon: Settings },
   { label: "Infrastructure", path: "/admin/system", icon: Settings },
+  { label: "Email & Notifications", path: "/admin/email", icon: Mail },
   { label: "Security Logs", path: "/admin/security", icon: Lock },
   { label: "Homepage Control", path: "/admin/homepage-control", icon: FileText },
 ];

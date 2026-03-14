@@ -93,6 +93,7 @@ const App = () => (
               <Route path="wallets" element={<AdminWallets />} />
               <Route path="api" element={<AdminApiSettings />} />
               <Route path="system" element={<AdminSystemSettings />} />
+              <Route path="email" element={<AdminEmailSettings />} />
               <Route path="security" element={<AdminSecurityLogs />} />
               <Route path="homepage-control" element={<AdminHomepageControl />} />
               <Route path="plans" element={<AdminPlans />} />
