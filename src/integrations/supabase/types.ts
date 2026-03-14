@@ -981,6 +981,33 @@ export type Database = {
         }
         Relationships: []
       }
+      risk_profile_config: {
+        Row: {
+          id: string
+          profile_name: string
+          roi_max: number
+          roi_min: number
+          updated_at: string
+          volatility_level: string
+        }
+        Insert: {
+          id?: string
+          profile_name: string
+          roi_max?: number
+          roi_min?: number
+          updated_at?: string
+          volatility_level?: string
+        }
+        Update: {
+          id?: string
+          profile_name?: string
+          roi_max?: number
+          roi_min?: number
+          updated_at?: string
+          volatility_level?: string
+        }
+        Relationships: []
+      }
       risk_scores: {
         Row: {
           created_at: string
@@ -1258,6 +1285,7 @@ export type Database = {
       trades: {
         Row: {
           auto_close: boolean
+          buy_exchange: string
           capital_cap: number | null
           created_at: string
           created_by: string | null
@@ -1269,6 +1297,7 @@ export type Database = {
           min_investment: number
           risk_level: string
           roi_percent: number
+          sell_exchange: string
           settled_at: string | null
           settlement_attempts: number
           settlement_date: string | null
@@ -1279,9 +1308,11 @@ export type Database = {
           status: string
           strategy_type: string
           title: string
+          trading_pair: string
         }
         Insert: {
           auto_close?: boolean
+          buy_exchange?: string
           capital_cap?: number | null
           created_at?: string
           created_by?: string | null
@@ -1293,6 +1324,7 @@ export type Database = {
           min_investment: number
           risk_level?: string
           roi_percent: number
+          sell_exchange?: string
           settled_at?: string | null
           settlement_attempts?: number
           settlement_date?: string | null
@@ -1303,9 +1335,11 @@ export type Database = {
           status?: string
           strategy_type?: string
           title: string
+          trading_pair?: string
         }
         Update: {
           auto_close?: boolean
+          buy_exchange?: string
           capital_cap?: number | null
           created_at?: string
           created_by?: string | null
@@ -1317,6 +1351,7 @@ export type Database = {
           min_investment?: number
           risk_level?: string
           roi_percent?: number
+          sell_exchange?: string
           settled_at?: string | null
           settlement_attempts?: number
           settlement_date?: string | null
@@ -1327,6 +1362,7 @@ export type Database = {
           status?: string
           strategy_type?: string
           title?: string
+          trading_pair?: string
         }
         Relationships: []
       }

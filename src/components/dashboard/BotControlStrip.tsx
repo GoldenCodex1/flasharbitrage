@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useEffect } from "react";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface Props {
@@ -13,6 +14,23 @@ export default function BotControlStrip({ botActivity }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const botOn = botActivity?.bot_enabled ?? false;
+
+  // Realtime subscription for live bot updates
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('bot-activity-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bot_activity', filter: `user_id=eq.${user.id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["bot-activity"] });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user, queryClient]);
 
   const toggleBot = async () => {
     if (!user || !botActivity) return;

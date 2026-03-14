@@ -1,4 +1,4 @@
-import { Clock, TrendingUp, Users, Zap } from "lucide-react";
+import { Clock, TrendingUp, Users, Zap, ArrowRightLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -24,7 +24,6 @@ export default function SuggestedTrades({ trades }: Props) {
   const joinTrade = async (trade: Tables<"trades">) => {
     if (!user) return;
 
-    // Plan limit enforcement
     if (plan && !canTrade) {
       toast.error("You have reached your daily trade limit for your current plan.");
       return;
@@ -42,10 +41,16 @@ export default function SuggestedTrades({ trades }: Props) {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success(`Joined ${trade.title}`);
+      // Update bot_activity trades_today
+      await supabase.from("bot_activity").update({
+        trades_today: (await supabase.from("bot_activity").select("trades_today").eq("user_id", user.id).single()).data?.trades_today ?? 0 + 1,
+      }).eq("user_id", user.id);
+
+      toast.success(`Joined ${(trade as any).trading_pair ?? trade.title}`);
       queryClient.invalidateQueries({ queryKey: ["active-trade-entries"] });
       queryClient.invalidateQueries({ queryKey: ["suggested-trades"] });
       queryClient.invalidateQueries({ queryKey: ["trades-today-count"] });
+      queryClient.invalidateQueries({ queryKey: ["bot-activity"] });
     }
   };
 
@@ -60,35 +65,64 @@ export default function SuggestedTrades({ trades }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {trades.map((trade) => {
+        const t = trade as any;
         const remainingSlots = trade.slot_limit - trade.slots_filled;
         const timeLeft = trade.expires_at
           ? getTimeLeft(trade.expires_at)
           : `${trade.duration_hours}h`;
+        const tradingPair = t.trading_pair ?? "BTC/USDT";
+        const buyExchange = t.buy_exchange ?? "Binance";
+        const sellExchange = t.sell_exchange ?? "Coinbase";
 
         return (
           <div key={trade.id} className="glass-card-hover p-5 flex flex-col gap-3">
+            {/* Header: Trading Pair + Risk Badge */}
             <div className="flex items-center justify-between">
-              <h3 className="font-display font-semibold text-sm">{trade.title}</h3>
-              <span className={riskColor[trade.risk_level] || "status-badge-info"}>{trade.risk_level}</span>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.12)" }}>
+                  <ArrowRightLeft className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-sm">{tradingPair}</h3>
+                  <span className="text-[10px] text-muted-foreground capitalize">{t.strategy_type ?? "arbitrage"}</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-end gap-1">
+                <span className={riskColor[trade.risk_level] || "status-badge-info"}>{trade.risk_level}</span>
+                <span className="text-[10px] text-success font-medium">● Available</span>
+              </div>
             </div>
 
+            {/* ROI Highlight */}
+            <div className="bg-success/8 border border-success/20 rounded-lg px-3 py-2 text-center">
+              <span className="text-xs text-muted-foreground">Expected ROI</span>
+              <p className="text-success font-display font-bold text-lg">+{Number(trade.roi_percent)}%</p>
+            </div>
+
+            {/* Exchange Info */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-secondary/50 rounded-lg px-3 py-2">
+                <span className="text-[10px] text-muted-foreground block">Buy Exchange</span>
+                <span className="text-xs font-semibold text-foreground">{buyExchange}</span>
+              </div>
+              <div className="bg-secondary/50 rounded-lg px-3 py-2">
+                <span className="text-[10px] text-muted-foreground block">Sell Exchange</span>
+                <span className="text-xs font-semibold text-foreground">{sellExchange}</span>
+              </div>
+            </div>
+
+            {/* Trade Details */}
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <TrendingUp className="w-3.5 h-3.5 text-success" />
-                <span>ROI: <span className="text-success font-semibold">{Number(trade.roi_percent)}%</span></span>
-              </div>
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Clock className="w-3.5 h-3.5" />
-                <span>{trade.duration_hours}h</span>
-              </div>
               <div className="text-muted-foreground">
-                Min: <span className="text-foreground">${Number(trade.min_investment).toLocaleString()}</span>
+                Min: <span className="text-foreground font-medium">${Number(trade.min_investment).toLocaleString()}</span>
               </div>
-              <div className="text-muted-foreground">
-                Max: <span className="text-foreground">${Number(trade.max_investment).toLocaleString()}</span>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                <span>{Number(trade.duration_hours)}h duration</span>
               </div>
             </div>
 
+            {/* Footer */}
             <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/30">
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -101,9 +135,9 @@ export default function SuggestedTrades({ trades }: Props) {
               <button
                 onClick={() => joinTrade(trade)}
                 disabled={remainingSlots <= 0}
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="px-5 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
-                Join
+                Trade Now
               </button>
             </div>
           </div>

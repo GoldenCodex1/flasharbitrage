@@ -135,6 +135,10 @@ export default function AdminTradeDetail() {
     }
 
     const updatePayload: any = { status: nextStatus };
+    if (nextStatus === "active") {
+      // Set expires_at based on duration_hours for automatic lifecycle
+      updatePayload.expires_at = new Date(Date.now() + Number(trade.duration_hours) * 3600000).toISOString();
+    }
     if (nextStatus === "settled" || nextStatus === "cancelled") {
       updatePayload.settlement_date = new Date().toISOString();
     }
@@ -209,8 +213,11 @@ export default function AdminTradeDetail() {
           <h3 className="font-display font-semibold text-sm">Trade Configuration</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[
+              ["Trading Pair", (trade as any).trading_pair ?? "BTC/USDT"],
               ["ROI", `${Number(trade.roi_percent)}%`],
               ["Duration", `${Number(trade.duration_hours)}h`],
+              ["Buy Exchange", (trade as any).buy_exchange ?? "—"],
+              ["Sell Exchange", (trade as any).sell_exchange ?? "—"],
               ["Min Investment", `$${Number(trade.min_investment)}`],
               ["Max Investment", `$${Number(trade.max_investment).toLocaleString()}`],
               ["Slot Limit", `${trade.slot_limit}`],

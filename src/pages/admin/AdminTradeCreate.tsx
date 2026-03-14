@@ -7,11 +7,15 @@ import { toast } from "sonner";
 
 const FIELD_CLASS = "bg-secondary border border-border/30 rounded-lg px-3 py-2 text-sm text-foreground w-full";
 
+const EXCHANGES = ["Binance", "Coinbase", "Kraken", "KuCoin", "Bybit", "OKX"];
+const TRADING_PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT", "AVAX/USDT", "DOT/USDT", "MATIC/USDT"];
+
 export default function AdminTradeCreate() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: "",
+    trading_pair: "BTC/USDT",
     strategy_type: "arbitrage",
     roi_percent: "",
     duration_hours: "",
@@ -23,19 +27,28 @@ export default function AdminTradeCreate() {
     auto_close: false,
     settlement_mode: "auto",
     description: "",
+    buy_exchange: "Binance",
+    sell_exchange: "Coinbase",
   });
 
   const set = (key: string, value: string | boolean) => setForm((p) => ({ ...p, [key]: value }));
 
+  // Auto-generate title from trading pair + strategy
+  const autoTitle = form.trading_pair
+    ? `${form.trading_pair} ${form.strategy_type.charAt(0).toUpperCase() + form.strategy_type.slice(1)} Sprint`
+    : "";
+
   const handleCreate = async () => {
-    if (!form.title || !form.roi_percent || !form.duration_hours || !form.min_investment || !form.max_investment) {
+    if (!form.trading_pair || !form.roi_percent || !form.duration_hours || !form.min_investment || !form.max_investment) {
       toast.error("Please fill all required fields");
       return;
     }
     setSaving(true);
     const { data: { user } } = await supabase.auth.getUser();
+    const finalTitle = form.title || autoTitle;
     const { error } = await supabase.from("trades").insert({
-      title: form.title,
+      title: finalTitle,
+      trading_pair: form.trading_pair,
       strategy_type: form.strategy_type,
       roi_percent: Number(form.roi_percent),
       duration_hours: Number(form.duration_hours),
@@ -47,6 +60,8 @@ export default function AdminTradeCreate() {
       auto_close: form.auto_close,
       settlement_mode: form.settlement_mode,
       description: form.description || null,
+      buy_exchange: form.buy_exchange,
+      sell_exchange: form.sell_exchange,
       created_by: user?.id ?? null,
       status: "draft",
     } as any);
@@ -68,9 +83,14 @@ export default function AdminTradeCreate() {
 
       <div className="glass-card p-6 space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
-            <label className="text-xs text-muted-foreground mb-1 block">Title *</label>
-            <input value={form.title} onChange={(e) => set("title", e.target.value)} className={FIELD_CLASS} placeholder="e.g. BTC/ETH Arbitrage Sprint" />
+          {/* Trading Pair */}
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Trading Pair *</label>
+            <select value={form.trading_pair} onChange={(e) => set("trading_pair", e.target.value)} className={FIELD_CLASS}>
+              {TRADING_PAIRS.map((p) => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Strategy Type</label>
@@ -81,13 +101,36 @@ export default function AdminTradeCreate() {
               <option value="defi">DeFi</option>
             </select>
           </div>
+          <div className="sm:col-span-2">
+            <label className="text-xs text-muted-foreground mb-1 block">Title (auto-generated if empty)</label>
+            <input value={form.title} onChange={(e) => set("title", e.target.value)} className={FIELD_CLASS} placeholder={autoTitle} />
+          </div>
+
+          {/* Exchange Fields */}
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Buy Exchange *</label>
+            <select value={form.buy_exchange} onChange={(e) => set("buy_exchange", e.target.value)} className={FIELD_CLASS}>
+              {EXCHANGES.map((ex) => (
+                <option key={ex} value={ex}>{ex}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Sell Exchange *</label>
+            <select value={form.sell_exchange} onChange={(e) => set("sell_exchange", e.target.value)} className={FIELD_CLASS}>
+              {EXCHANGES.map((ex) => (
+                <option key={ex} value={ex}>{ex}</option>
+              ))}
+            </select>
+          </div>
+
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">ROI % *</label>
             <input type="number" value={form.roi_percent} onChange={(e) => set("roi_percent", e.target.value)} className={FIELD_CLASS} placeholder="e.g. 8.5" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Duration (hours) *</label>
-            <input type="number" value={form.duration_hours} onChange={(e) => set("duration_hours", e.target.value)} className={FIELD_CLASS} placeholder="e.g. 24" />
+            <input type="number" value={form.duration_hours} onChange={(e) => set("duration_hours", e.target.value)} className={FIELD_CLASS} placeholder="e.g. 3" />
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Risk Tier</label>
