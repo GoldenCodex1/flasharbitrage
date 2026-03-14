@@ -12,12 +12,7 @@ export default function HomepageNav() {
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/30 backdrop-blur-xl bg-background/80">
       <div className="max-w-6xl mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-display font-bold text-sm">A</span>
-          </div>
-          <span className="font-display font-bold text-lg">
-            Arb<span className="text-primary">AI</span>
-          </span>
+          <SiteLogo />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
