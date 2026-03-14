@@ -1,9 +1,10 @@
-import { Clock, TrendingUp, Users, Zap, ArrowRightLeft } from "lucide-react";
+import { Clock, TrendingUp, Users, Zap, ArrowRightLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useUserPlan } from "@/hooks/useUserPlan";
+import { useRef, useState } from "react";
 import type { Tables } from "@/integrations/supabase/types";
 
 const riskColor: Record<string, string> = {
@@ -16,10 +17,16 @@ interface Props {
   trades: Tables<"trades">[];
 }
 
+const MAX_VISIBLE = 5;
+
 export default function SuggestedTrades({ trades }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { plan, canTrade } = useUserPlan();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [page, setPage] = useState(0);
+  const totalPages = Math.ceil(trades.length / MAX_VISIBLE);
+  const visible = trades.slice(page * MAX_VISIBLE, (page + 1) * MAX_VISIBLE);
 
   const joinTrade = async (trade: Tables<"trades">) => {
     if (!user) return;
@@ -41,7 +48,6 @@ export default function SuggestedTrades({ trades }: Props) {
     if (error) {
       toast.error(error.message);
     } else {
-      // Update bot_activity trades_today
       await supabase.from("bot_activity").update({
         trades_today: (await supabase.from("bot_activity").select("trades_today").eq("user_id", user.id).single()).data?.trades_today ?? 0 + 1,
       }).eq("user_id", user.id);
@@ -63,86 +69,105 @@ export default function SuggestedTrades({ trades }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {trades.map((trade) => {
-        const t = trade as any;
-        const remainingSlots = trade.slot_limit - trade.slots_filled;
-        const timeLeft = trade.expires_at
-          ? getTimeLeft(trade.expires_at)
-          : `${trade.duration_hours}h`;
-        const tradingPair = t.trading_pair ?? "BTC/USDT";
-        const buyExchange = t.buy_exchange ?? "Binance";
-        const sellExchange = t.sell_exchange ?? "Coinbase";
+    <div className="space-y-3">
+      <div ref={scrollRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {visible.map((trade) => {
+          const t = trade as any;
+          const remainingSlots = trade.slot_limit - trade.slots_filled;
+          const timeLeft = trade.expires_at
+            ? getTimeLeft(trade.expires_at)
+            : `${trade.duration_hours}h`;
+          const tradingPair = t.trading_pair ?? "BTC/USDT";
+          const buyExchange = t.buy_exchange ?? "Binance";
+          const sellExchange = t.sell_exchange ?? "Coinbase";
 
-        return (
-          <div key={trade.id} className="glass-card-hover p-5 flex flex-col gap-3">
-            {/* Header: Trading Pair + Risk Badge */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.12)" }}>
-                  <ArrowRightLeft className="w-4 h-4 text-primary" />
+          return (
+            <div key={trade.id} className="glass-card-hover p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--primary) / 0.12)" }}>
+                    <ArrowRightLeft className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-bold text-sm">{tradingPair}</h3>
+                    <span className="text-[10px] text-muted-foreground capitalize">{t.strategy_type ?? "arbitrage"}</span>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-display font-bold text-sm">{tradingPair}</h3>
-                  <span className="text-[10px] text-muted-foreground capitalize">{t.strategy_type ?? "arbitrage"}</span>
+                <div className="flex flex-col items-end gap-1">
+                  <span className={riskColor[trade.risk_level] || "status-badge-info"}>{trade.risk_level}</span>
+                  <span className="text-[10px] text-success font-medium">● Available</span>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className={riskColor[trade.risk_level] || "status-badge-info"}>{trade.risk_level}</span>
-                <span className="text-[10px] text-success font-medium">● Available</span>
-              </div>
-            </div>
 
-            {/* ROI Highlight */}
-            <div className="bg-success/8 border border-success/20 rounded-lg px-3 py-2 text-center">
-              <span className="text-xs text-muted-foreground">Expected ROI</span>
-              <p className="text-success font-display font-bold text-lg">+{Number(trade.roi_percent)}%</p>
-            </div>
+              <div className="bg-success/8 border border-success/20 rounded-lg px-3 py-2 text-center">
+                <span className="text-xs text-muted-foreground">Expected ROI</span>
+                <p className="text-success font-display font-bold text-lg">+{Number(trade.roi_percent)}%</p>
+              </div>
 
-            {/* Exchange Info */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-secondary/50 rounded-lg px-3 py-2">
-                <span className="text-[10px] text-muted-foreground block">Buy Exchange</span>
-                <span className="text-xs font-semibold text-foreground">{buyExchange}</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-secondary/50 rounded-lg px-3 py-2">
+                  <span className="text-[10px] text-muted-foreground block">Buy Exchange</span>
+                  <span className="text-xs font-semibold text-foreground">{buyExchange}</span>
+                </div>
+                <div className="bg-secondary/50 rounded-lg px-3 py-2">
+                  <span className="text-[10px] text-muted-foreground block">Sell Exchange</span>
+                  <span className="text-xs font-semibold text-foreground">{sellExchange}</span>
+                </div>
               </div>
-              <div className="bg-secondary/50 rounded-lg px-3 py-2">
-                <span className="text-[10px] text-muted-foreground block">Sell Exchange</span>
-                <span className="text-xs font-semibold text-foreground">{sellExchange}</span>
-              </div>
-            </div>
 
-            {/* Trade Details */}
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="text-muted-foreground">
-                Min: <span className="text-foreground font-medium">${Number(trade.min_investment).toLocaleString()}</span>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="text-muted-foreground">
+                  Min: <span className="text-foreground font-medium">${Number(trade.min_investment).toLocaleString()}</span>
+                </div>
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Clock className="w-3 h-3" />
+                  <span>{Number(trade.duration_hours)}h duration</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                <span>{Number(trade.duration_hours)}h duration</span>
-              </div>
-            </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/30">
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Users className="w-3 h-3" /> {remainingSlots} slots
-                </span>
-                <span className="flex items-center gap-1">
-                  <Zap className="w-3 h-3" /> {timeLeft}
-                </span>
+              <div className="flex items-center justify-between mt-auto pt-3 border-t border-border/30">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Users className="w-3 h-3" /> {remainingSlots} slots
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Zap className="w-3 h-3" /> {timeLeft}
+                  </span>
+                </div>
+                <button
+                  onClick={() => joinTrade(trade)}
+                  disabled={remainingSlots <= 0}
+                  className="px-5 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  Trade Now
+                </button>
               </div>
-              <button
-                onClick={() => joinTrade(trade)}
-                disabled={remainingSlots <= 0}
-                className="px-5 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                Trade Now
-              </button>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className="p-1.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors disabled:opacity-30"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-xs text-muted-foreground">
+            {page + 1} / {totalPages}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            className="p-1.5 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors disabled:opacity-30"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
