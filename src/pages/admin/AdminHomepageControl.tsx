@@ -16,6 +16,8 @@ interface HeroContent { id: string; headline: string; subheadline: string; prima
 interface SeoMeta { id: string; meta_title: string; meta_description: string; og_title: string; og_description: string; og_image: string; keywords: string; }
 interface FooterPage { id: string; title: string; slug: string; content: string; is_visible: boolean; display_order: number; }
 interface TeamMember { id: string; name: string; role: string; bio: string; photo_url: string | null; display_order: number; is_visible: boolean; }
+interface SectionData { id: string; section_key: string; title: string; subtitle: string; items: SectionItem[]; }
+interface SectionItem { icon: string; title: string; desc: string; }
 
 export default function AdminHomepageControl() {
   const [stats, setStats] = useState<Stat[]>([]);
