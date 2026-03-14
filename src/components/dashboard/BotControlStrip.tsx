@@ -35,10 +35,23 @@ export default function BotControlStrip({ botActivity }: Props) {
   }, [user, queryClient]);
 
   const toggleBot = async () => {
-    if (!user || !botActivity) return;
-
-    // Validation when turning ON
-    if (!botOn) {
+    if (!user) return;
+    
+    // Auto-create bot_activity row if missing
+    let currentBot = botActivity;
+    if (!currentBot) {
+      const { data: newBot } = await supabase
+        .from("bot_activity")
+        .upsert({ user_id: user.id }, { onConflict: "user_id" })
+        .select()
+        .single();
+      if (!newBot) {
+        toast.error("Failed to initialize bot");
+        return;
+      }
+      currentBot = newBot;
+      queryClient.invalidateQueries({ queryKey: ["bot-activity"] });
+    }
       // Check balance
       const { data: txns } = await supabase
         .from("transactions")
