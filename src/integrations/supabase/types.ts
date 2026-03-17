@@ -1451,6 +1451,54 @@ export type Database = {
           },
         ]
       }
+      trade_generator_config: {
+        Row: {
+          enabled: boolean
+          exchanges: string[]
+          generation_interval_minutes: number
+          id: string
+          max_active_trades: number
+          max_duration_hours: number
+          max_investment_default: number
+          min_duration_hours: number
+          min_investment_default: number
+          slot_limit_default: number
+          trading_pairs: string[]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          exchanges?: string[]
+          generation_interval_minutes?: number
+          id?: string
+          max_active_trades?: number
+          max_duration_hours?: number
+          max_investment_default?: number
+          min_duration_hours?: number
+          min_investment_default?: number
+          slot_limit_default?: number
+          trading_pairs?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          exchanges?: string[]
+          generation_interval_minutes?: number
+          id?: string
+          max_active_trades?: number
+          max_duration_hours?: number
+          max_investment_default?: number
+          min_duration_hours?: number
+          min_investment_default?: number
+          slot_limit_default?: number
+          trading_pairs?: string[]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       trade_settlement_summary: {
         Row: {
           id: string
