@@ -27,10 +27,10 @@ import {
 const adminNavItems = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { label: "Trade Engine", path: "/admin/trades", icon: TrendingUp },
+  { label: "Trade Generator", path: "/admin/trade-engine", icon: Bot },
   { label: "Finance", path: "/admin/finance", icon: DollarSign },
   { label: "Auto Bot Settings", path: "/admin/bot", icon: Bot },
   { label: "Users", path: "/admin/users", icon: Users },
-  
   { label: "Plans", path: "/admin/plans", icon: Crown },
   { label: "Referrals", path: "/admin/referrals", icon: Gift },
   { label: "KYC", path: "/admin/kyc", icon: ShieldCheck },
