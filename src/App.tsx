@@ -43,6 +43,7 @@ import AdminSystemSettings from "@/pages/admin/AdminSystemSettings";
 import AdminSettlementLogs from "@/pages/admin/AdminSettlementLogs";
 import AdminPlans from "@/pages/admin/AdminPlans";
 import AdminEmailSettings from "@/pages/admin/AdminEmailSettings";
+import AdminTradeEngine from "@/pages/admin/AdminTradeEngine";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -98,6 +99,7 @@ const App = () => (
               <Route path="homepage-control" element={<AdminHomepageControl />} />
               <Route path="plans" element={<AdminPlans />} />
               <Route path="trades/settlement-logs" element={<AdminSettlementLogs />} />
+              <Route path="trade-engine" element={<AdminTradeEngine />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
