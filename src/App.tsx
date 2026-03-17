@@ -43,6 +43,7 @@ import AdminSystemSettings from "@/pages/admin/AdminSystemSettings";
 import AdminSettlementLogs from "@/pages/admin/AdminSettlementLogs";
 import AdminPlans from "@/pages/admin/AdminPlans";
 import AdminEmailSettings from "@/pages/admin/AdminEmailSettings";
+import AdminTradeEngine from "@/pages/admin/AdminTradeEngine";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
