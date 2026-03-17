@@ -99,6 +99,7 @@ const App = () => (
               <Route path="homepage-control" element={<AdminHomepageControl />} />
               <Route path="plans" element={<AdminPlans />} />
               <Route path="trades/settlement-logs" element={<AdminSettlementLogs />} />
+              <Route path="trade-engine" element={<AdminTradeEngine />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
