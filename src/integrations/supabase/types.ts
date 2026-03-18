@@ -1867,6 +1867,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      join_trade: {
+        Args: {
+          _amount?: number
+          _source?: string
+          _trade_id: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       settle_trade: { Args: { _trade_id: string }; Returns: Json }
       upgrade_plan: {
         Args: { _plan_id: string; _user_id: string }
