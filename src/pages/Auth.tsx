@@ -12,13 +12,17 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [referralCode, setReferralCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [needs2FA, setNeeds2FA] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Extract referral code from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const refFromUrl = urlParams.get("ref") || "";
+  const [referralCode, setReferralCode] = useState(refFromUrl);
 
   // Redirect to dashboard once auth context picks up the user
   useEffect(() => {
