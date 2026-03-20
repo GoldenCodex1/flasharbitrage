@@ -1,11 +1,8 @@
 import { Clock, TrendingUp, Users, Zap, ArrowRightLeft, ChevronLeft, ChevronRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
-import { useUserPlan } from "@/hooks/useUserPlan";
 import { useRef, useState } from "react";
 import type { Tables } from "@/integrations/supabase/types";
+import TradeModal from "./TradeModal";
 
 const riskColor: Record<string, string> = {
   Low: "status-badge-success",
@@ -15,50 +12,19 @@ const riskColor: Record<string, string> = {
 
 interface Props {
   trades: Tables<"trades">[];
+  balance?: number;
 }
 
 const MAX_VISIBLE = 5;
 
-export default function SuggestedTrades({ trades }: Props) {
+export default function SuggestedTrades({ trades, balance = 0 }: Props) {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const { plan, canTrade } = useUserPlan();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState(0);
+  const [selectedTrade, setSelectedTrade] = useState<Tables<"trades"> | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const totalPages = Math.ceil(trades.length / MAX_VISIBLE);
   const visible = trades.slice(page * MAX_VISIBLE, (page + 1) * MAX_VISIBLE);
-
-  const joinTrade = async (trade: Tables<"trades">) => {
-    if (!user) return;
-
-    if (plan && !canTrade) {
-      toast.error("You have reached your daily trade limit for your current plan.");
-      return;
-    }
-    if (plan && Number(trade.min_investment) > Number(plan.max_trade_amount)) {
-      toast.error(`Trade amount exceeds your plan limit of $${Number(plan.max_trade_amount).toLocaleString()}.`);
-      return;
-    }
-
-    const { error } = await supabase.from("trade_entries").insert({
-      trade_id: trade.id,
-      user_id: user.id,
-      amount: Number(trade.min_investment),
-    });
-    if (error) {
-      toast.error(error.message);
-    } else {
-      await supabase.from("bot_activity").update({
-        trades_today: (await supabase.from("bot_activity").select("trades_today").eq("user_id", user.id).single()).data?.trades_today ?? 0 + 1,
-      }).eq("user_id", user.id);
-
-      toast.success(`Joined ${(trade as any).trading_pair ?? trade.title}`);
-      queryClient.invalidateQueries({ queryKey: ["active-trade-entries"] });
-      queryClient.invalidateQueries({ queryKey: ["suggested-trades"] });
-      queryClient.invalidateQueries({ queryKey: ["trades-today-count"] });
-      queryClient.invalidateQueries({ queryKey: ["bot-activity"] });
-    }
-  };
 
   if (trades.length === 0) {
     return (
@@ -80,6 +46,8 @@ export default function SuggestedTrades({ trades }: Props) {
           const tradingPair = t.trading_pair ?? "BTC/USDT";
           const buyExchange = t.buy_exchange ?? "Binance";
           const sellExchange = t.sell_exchange ?? "Coinbase";
+          const minInvestment = Number(trade.min_investment);
+          const insufficientBalance = balance < minInvestment;
 
           return (
             <div key={trade.id} className="glass-card-hover p-5 flex flex-col gap-3">
@@ -117,7 +85,7 @@ export default function SuggestedTrades({ trades }: Props) {
 
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="text-muted-foreground">
-                  Min: <span className="text-foreground font-medium">${Number(trade.min_investment).toLocaleString()}</span>
+                  Min: <span className="text-foreground font-medium">${minInvestment.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <Clock className="w-3 h-3" />
@@ -135,11 +103,12 @@ export default function SuggestedTrades({ trades }: Props) {
                   </span>
                 </div>
                 <button
-                  onClick={() => joinTrade(trade)}
-                  disabled={remainingSlots <= 0}
+                  onClick={() => { setSelectedTrade(trade); setModalOpen(true); }}
+                  disabled={remainingSlots <= 0 || insufficientBalance}
+                  title={insufficientBalance ? "Insufficient balance" : undefined}
                   className="px-5 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
-                  Trade Now
+                  {insufficientBalance ? "Low Balance" : "Trade Now"}
                 </button>
               </div>
             </div>
@@ -168,6 +137,13 @@ export default function SuggestedTrades({ trades }: Props) {
           </button>
         </div>
       )}
+
+      <TradeModal
+        trade={selectedTrade}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        balance={balance}
+      />
     </div>
   );
 }
