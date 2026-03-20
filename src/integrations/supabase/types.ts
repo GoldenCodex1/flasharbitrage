@@ -235,12 +235,14 @@ export type Database = {
       bot_activity: {
         Row: {
           bot_enabled: boolean
+          capital_allocation: number
           compound_profits: boolean
           created_at: string
           daily_trade_limit: number
           id: string
           last_reset_at: string
           loss_today: number
+          max_per_trade_percent: number
           profit_today: number
           risk_profile: string
           trades_today: number
@@ -248,12 +250,14 @@ export type Database = {
         }
         Insert: {
           bot_enabled?: boolean
+          capital_allocation?: number
           compound_profits?: boolean
           created_at?: string
           daily_trade_limit?: number
           id?: string
           last_reset_at?: string
           loss_today?: number
+          max_per_trade_percent?: number
           profit_today?: number
           risk_profile?: string
           trades_today?: number
@@ -261,12 +265,14 @@ export type Database = {
         }
         Update: {
           bot_enabled?: boolean
+          capital_allocation?: number
           compound_profits?: boolean
           created_at?: string
           daily_trade_limit?: number
           id?: string
           last_reset_at?: string
           loss_today?: number
+          max_per_trade_percent?: number
           profit_today?: number
           risk_profile?: string
           trades_today?: number
