@@ -40,7 +40,6 @@ Deno.serve(async (req) => {
 
     const riskMap: Record<string, { roi_min: number; roi_max: number }> = {};
     for (const rp of riskProfiles ?? []) {
-      // Map profile_name to bot_activity risk_profile values
       const key = rp.profile_name.toLowerCase() === "balanced" ? "moderate" : rp.profile_name.toLowerCase();
       riskMap[key] = { roi_min: Number(rp.roi_min), roi_max: Number(rp.roi_max) };
     }
@@ -73,87 +72,50 @@ Deno.serve(async (req) => {
 
     for (const bot of activeBots) {
       try {
-        // Get user's plan
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("plan_id")
-          .eq("user_id", bot.user_id)
-          .maybeSingle();
-
-        if (!profile?.plan_id) continue;
-
-        const { data: plan } = await supabase
-          .from("plans")
-          .select("*")
-          .eq("id", profile.plan_id)
-          .maybeSingle();
-
-        if (!plan) continue;
-
-        // Check trades today
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const { count: tradesToday } = await supabase
-          .from("trade_entries")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", bot.user_id)
-          .gte("started_at", today.toISOString());
-
-        const currentTradesToday = tradesToday ?? 0;
-
-        // Check active auto trade slots
-        const { count: activeSlots } = await supabase
-          .from("trade_entries")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", bot.user_id)
-          .eq("status", "active");
-
-        const currentActiveSlots = activeSlots ?? 0;
-
         // Get user balance
         const { data: balanceData } = await supabase
           .from("transactions")
           .select("amount")
           .eq("user_id", bot.user_id);
 
-        const balance = balanceData?.reduce((sum, t) => sum + Number(t.amount), 0) ?? 0;
+        const totalBalance = balanceData?.reduce((sum: number, t: any) => sum + Number(t.amount), 0) ?? 0;
+
+        // Capital allocation logic
+        const capitalAllocation = Number(bot.capital_allocation ?? 0);
+        const maxPerTradePercent = Number(bot.max_per_trade_percent ?? 25);
+
+        // If user set a capital allocation, use it; otherwise use full balance
+        const availableCapital = capitalAllocation > 0 ? Math.min(capitalAllocation, totalBalance) : totalBalance;
+
+        // Calculate how much is already locked in active trades
+        const { data: activeEntries } = await supabase
+          .from("trade_entries")
+          .select("amount")
+          .eq("user_id", bot.user_id)
+          .eq("status", "active");
+
+        const lockedCapital = activeEntries?.reduce((sum: number, e: any) => sum + Number(e.amount), 0) ?? 0;
+        const remainingCapital = availableCapital - lockedCapital;
+
+        // Safety cap: max amount per trade
+        const safetyCap = availableCapital * (maxPerTradePercent / 100);
 
         // Safety shutdown checks
-        let shouldShutdown = false;
-        let shutdownReason = "";
-
-        if (currentTradesToday >= plan.max_trades_per_day) {
-          shouldShutdown = true;
-          shutdownReason = "bot_limit_reached: daily trade limit";
-        } else if (currentActiveSlots >= plan.max_auto_trade_slots) {
-          shouldShutdown = true;
-          shutdownReason = "bot_limit_reached: auto trade slot limit";
-        } else if (balance < 1) {
-          shouldShutdown = true;
-          shutdownReason = "bot_limit_reached: insufficient balance";
-        }
-
-        if (shouldShutdown) {
-          await supabase
-            .from("bot_activity")
-            .update({ bot_enabled: false })
-            .eq("user_id", bot.user_id);
-
+        if (totalBalance < 1 || remainingCapital < 1) {
+          await supabase.from("bot_activity").update({ bot_enabled: false }).eq("user_id", bot.user_id);
           await supabase.from("bot_logs").insert({
             user_id: bot.user_id,
             action_type: "bot_stopped",
             category: "safety",
-            new_value: shutdownReason,
+            new_value: "bot_limit_reached: insufficient capital",
           });
-
           await supabase.from("notifications").insert({
             user_id: bot.user_id,
             title: "Auto Bot Paused",
-            message: "Auto trading bot paused due to plan or balance limits.",
+            message: "Bot paused: capital allocation exhausted or insufficient balance.",
             type: "warning",
           });
-
-          results.push({ user_id: bot.user_id, action: "shutdown", reason: shutdownReason });
+          results.push({ user_id: bot.user_id, action: "shutdown", reason: "capital_exhausted" });
           continue;
         }
 
@@ -161,21 +123,16 @@ Deno.serve(async (req) => {
         const userRisk = bot.risk_profile?.toLowerCase() ?? "moderate";
         const riskConfig = riskMap[userRisk];
 
-        // Find a trade to join (one the user hasn't already joined)
-        const { data: existingEntries } = await supabase
-          .from("trade_entries")
-          .select("trade_id")
-          .eq("user_id", bot.user_id)
-          .eq("status", "active");
+        // Get already joined trade IDs
+        const joinedTradeIds = new Set((activeEntries ?? []).map((e: any) => e.trade_id));
 
-        const joinedTradeIds = new Set((existingEntries ?? []).map(e => e.trade_id));
-
-        const eligibleTrade = activeTrades.find(t => {
+        // Find eligible trades sorted by risk fit
+        const eligibleTrades = activeTrades.filter(t => {
           if (joinedTradeIds.has(t.id)) return false;
           if (t.slots_filled >= t.slot_limit) return false;
-          if (Number(t.min_investment) > balance) return false;
-          if (Number(t.min_investment) > plan.max_trade_amount) return false;
-          // Filter by risk profile ROI range
+          const minInv = Number(t.min_investment);
+          if (minInv > remainingCapital) return false;
+          if (minInv > safetyCap) return false;
           if (riskConfig) {
             const tradeRoi = Number(t.roi_percent);
             if (tradeRoi < riskConfig.roi_min || tradeRoi > riskConfig.roi_max) return false;
@@ -183,58 +140,81 @@ Deno.serve(async (req) => {
           return true;
         });
 
-        if (!eligibleTrade) {
-          results.push({ user_id: bot.user_id, action: "no_eligible_trades", risk: userRisk });
+        if (eligibleTrades.length === 0) {
+          results.push({ user_id: bot.user_id, action: "no_eligible_trades", risk: userRisk, remaining_capital: remainingCapital });
           continue;
         }
 
-        // Join the trade
-        const tradeAmount = Number(eligibleTrade.min_investment);
-        const { error: joinError } = await supabase.from("trade_entries").insert({
-          trade_id: eligibleTrade.id,
-          user_id: bot.user_id,
-          amount: tradeAmount,
+        // Smart splitting: pick best trade based on risk profile
+        // Conservative → smallest amount; Aggressive → largest; Balanced → middle
+        let sortedTrades = [...eligibleTrades];
+        if (userRisk === "conservative") {
+          sortedTrades.sort((a, b) => Number(a.min_investment) - Number(b.min_investment));
+        } else if (userRisk === "aggressive") {
+          sortedTrades.sort((a, b) => Number(b.min_investment) - Number(a.min_investment));
+        } else {
+          // Balanced: sort by ROI ascending (moderate picks)
+          sortedTrades.sort((a, b) => Number(a.roi_percent) - Number(b.roi_percent));
+        }
+
+        const chosenTrade = sortedTrades[0];
+
+        // Determine trade amount: min investment, capped by safety cap and remaining capital
+        const tradeAmount = Math.min(
+          Number(chosenTrade.min_investment),
+          safetyCap,
+          remainingCapital
+        );
+
+        if (tradeAmount < Number(chosenTrade.min_investment)) {
+          results.push({ user_id: bot.user_id, action: "skip_insufficient_for_min", remaining: remainingCapital, cap: safetyCap });
+          continue;
+        }
+
+        // Use the atomic join_trade RPC for safety
+        const { data: joinResult, error: joinError } = await supabase.rpc("join_trade", {
+          _user_id: bot.user_id,
+          _trade_id: chosenTrade.id,
+          _amount: tradeAmount,
+          _source: "auto_bot",
         });
 
         if (joinError) {
-          results.push({ user_id: bot.user_id, action: "join_failed", error: joinError.message });
+          results.push({ user_id: bot.user_id, action: "join_rpc_error", error: joinError.message });
           continue;
         }
 
-        // Deduct from balance
-        await supabase.from("transactions").insert({
-          user_id: bot.user_id,
-          type: "trade_investment",
-          amount: -tradeAmount,
-          description: `Auto bot: Joined ${eligibleTrade.trading_pair ?? eligibleTrade.title}`,
-          reference_id: eligibleTrade.id,
-        });
-
-        // Update bot activity
-        await supabase.from("bot_activity").update({
-          trades_today: currentTradesToday + 1,
-        }).eq("user_id", bot.user_id);
-
-        // Update trade slots
-        await supabase.from("trades").update({
-          slots_filled: eligibleTrade.slots_filled + 1,
-        }).eq("id", eligibleTrade.id);
+        const jr = joinResult as any;
+        if (jr && !jr.success) {
+          // If plan/balance limit hit, auto-disable bot
+          if (jr.error?.includes("limit") || jr.error?.includes("balance") || jr.error?.includes("slot")) {
+            await supabase.from("bot_activity").update({ bot_enabled: false }).eq("user_id", bot.user_id);
+            await supabase.from("notifications").insert({
+              user_id: bot.user_id,
+              title: "Auto Bot Paused",
+              message: `Bot paused: ${jr.error}`,
+              type: "warning",
+            });
+          }
+          results.push({ user_id: bot.user_id, action: "join_rejected", error: jr.error });
+          continue;
+        }
 
         // Log bot trade
         await supabase.from("bot_logs").insert({
           user_id: bot.user_id,
           action_type: "bot_trade_executed",
           category: "trade",
-          new_value: `Joined ${eligibleTrade.trading_pair ?? eligibleTrade.title} (ROI: ${eligibleTrade.roi_percent}%, Risk: ${userRisk}) with $${tradeAmount}`,
+          new_value: `Joined ${chosenTrade.trading_pair ?? chosenTrade.title} (ROI: ${chosenTrade.roi_percent}%, Risk: ${userRisk}) with $${tradeAmount}`,
         });
 
         results.push({
           user_id: bot.user_id,
           action: "trade_joined",
-          trade_id: eligibleTrade.id,
+          trade_id: chosenTrade.id,
           amount: tradeAmount,
           risk_profile: userRisk,
-          trade_roi: eligibleTrade.roi_percent,
+          trade_roi: chosenTrade.roi_percent,
         });
 
       } catch (userErr) {
