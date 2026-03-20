@@ -91,7 +91,7 @@ export default function Dashboard() {
 
       <motion.div variants={item}>
         <h2 className="font-display font-semibold text-lg mb-3">Suggested Trades</h2>
-        <SuggestedTrades trades={suggestedTrades} />
+        <SuggestedTrades trades={suggestedTrades} balance={totalBalance} />
       </motion.div>
 
       <motion.div variants={item}>
