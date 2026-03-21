@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, User, DollarSign, Activity, Shield, Lock, Ban,
   Pencil, RotateCcw, AlertTriangle, ChevronDown, ChevronUp,
+  Mail, Calendar, CreditCard, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,44 @@ export default function AdminUserDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
+        .select("*")
+        .eq("user_id", userId!)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  // Fetch user email via RPC
+  const { data: userEmail } = useQuery({
+    queryKey: ["admin-user-email", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_user_email", { _user_id: userId! });
+      return (data as string) ?? "—";
+    },
+  });
+
+  // Fetch user plan
+  const { data: userPlan } = useQuery({
+    queryKey: ["admin-user-plan", profile?.plan_id],
+    enabled: !!profile?.plan_id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("plans")
+        .select("*")
+        .eq("id", profile!.plan_id!)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  // Bot activity
+  const { data: botActivity } = useQuery({
+    queryKey: ["admin-user-bot", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("bot_activity")
         .select("*")
         .eq("user_id", userId!)
         .maybeSingle();
@@ -176,22 +215,28 @@ export default function AdminUserDetail() {
     const finalAmount = balanceType === "credit" ? amt : -amt;
     const prevBalance = financials.balance;
 
-    const { error } = await supabase.from("transactions").insert({
-      user_id: userId!,
-      amount: finalAmount,
-      type: balanceType === "credit" ? "admin_credit" : "admin_debit",
-      description: balanceReason,
-    });
+    try {
+      const { error } = await supabase.from("transactions").insert({
+        user_id: userId!,
+        amount: finalAmount,
+        type: balanceType === "credit" ? "admin_credit" : "admin_debit",
+        description: `Admin: ${balanceReason}`,
+      });
 
-    if (!error) {
-      await logAction("users/balance", balanceType, fmtUsd(prevBalance), fmtUsd(prevBalance + finalAmount));
-      toast.success("Balance adjusted successfully");
-      setBalanceOpen(false);
-      setBalanceAmount("");
-      setBalanceReason("");
-      queryClient.invalidateQueries({ queryKey: ["admin-user-txns", userId] });
-    } else {
-      toast.error(error.message);
+      if (error) {
+        console.error("Balance adjustment error:", error);
+        toast.error("Failed to adjust balance: " + error.message);
+      } else {
+        await logAction("users/balance", balanceType, fmtUsd(prevBalance), fmtUsd(prevBalance + finalAmount));
+        toast.success(`Balance ${balanceType === "credit" ? "credited" : "debited"}: ${fmtUsd(amt)}`);
+        setBalanceOpen(false);
+        setBalanceAmount("");
+        setBalanceReason("");
+        queryClient.invalidateQueries({ queryKey: ["admin-user-txns", userId] });
+      }
+    } catch (err: any) {
+      console.error("Balance adjustment exception:", err);
+      toast.error("Unexpected error: " + (err?.message ?? "Unknown"));
     }
     setBalanceSaving(false);
   };
@@ -228,7 +273,6 @@ export default function AdminUserDetail() {
   const confirmDelete = async () => {
     if (!userId) return;
     setDeleting(true);
-    // Cascade delete user data
     await supabase.from("notifications").delete().eq("user_id", userId);
     await supabase.from("bot_activity").delete().eq("user_id", userId);
     await supabase.from("trade_entries").delete().eq("user_id", userId);
@@ -277,8 +321,6 @@ export default function AdminUserDetail() {
   }
 
   const riskScoreVal = riskScore?.score ?? 0;
-
-  // Build activity timeline from transactions
   const activityTimeline = (transactions ?? []).slice(0, 20).map(tx => ({
     type: tx.type.replace(/_/g, " "),
     amount: Number(tx.amount),
@@ -293,11 +335,18 @@ export default function AdminUserDetail() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin/users")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="font-display font-bold text-xl">{profile.full_name || "Unnamed User"}</h1>
-          <p className="text-xs font-mono text-muted-foreground">{userId}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-mono text-muted-foreground">{userId}</span>
+            {userEmail && userEmail !== "—" && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Mail className="h-3 w-3" /> {userEmail}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className={profile.is_frozen ? "status-badge-danger" : "status-badge-success"}>
             {profile.is_frozen ? "Frozen" : "Active"}
           </span>
@@ -333,6 +382,10 @@ export default function AdminUserDetail() {
               <p className="font-medium">{profile.full_name || "—"}</p>
             </div>
             <div>
+              <p className="text-xs text-muted-foreground">Email</p>
+              <p className="font-medium text-xs break-all">{userEmail || "—"}</p>
+            </div>
+            <div>
               <p className="text-xs text-muted-foreground">Referral Code</p>
               <p className="font-mono text-xs">{profile.referral_code || "—"}</p>
             </div>
@@ -343,6 +396,36 @@ export default function AdminUserDetail() {
             <div>
               <p className="text-xs text-muted-foreground">Referrals Made</p>
               <p>{referrals?.length ?? 0}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">2FA</p>
+              <p>{profile.two_factor_enabled ? "✅ Enabled" : "❌ Disabled"}</p>
+            </div>
+          </div>
+
+          {/* Plan Info */}
+          <div className="border-t border-border/20 pt-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <CreditCard className="h-3.5 w-3.5 text-primary" />
+              <p className="text-xs font-medium text-muted-foreground">Plan</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Current Plan</p>
+                <p className="font-semibold">{userPlan?.name ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Max Trade</p>
+                <p>{userPlan ? fmtUsd(userPlan.max_trade_amount) : "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Trades/Day</p>
+                <p>{userPlan?.max_trades_per_day ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Expires</p>
+                <p>{profile.plan_expires_at ? format(new Date(profile.plan_expires_at), "MMM d, yyyy") : "Never"}</p>
+              </div>
             </div>
           </div>
 
@@ -399,6 +482,44 @@ export default function AdminUserDetail() {
           <div className="text-xs text-muted-foreground pt-1">
             Total Trades: {tradeEntries?.length ?? 0}
           </div>
+
+          {/* Bot Status */}
+          {botActivity && (
+            <div className="border-t border-border/20 pt-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-3.5 w-3.5 text-primary" />
+                <p className="text-xs font-medium text-muted-foreground">Auto Bot</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Status</p>
+                  <p className={botActivity.bot_enabled ? "text-success font-semibold text-xs" : "text-muted-foreground text-xs"}>
+                    {botActivity.bot_enabled ? "ON" : "OFF"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Capital</p>
+                  <p className="text-xs">{fmtUsd(Number(botActivity.capital_allocation))}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Risk</p>
+                  <p className="text-xs capitalize">{botActivity.risk_profile}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Trades Today</p>
+                  <p className="text-xs">{botActivity.trades_today}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Profit Today</p>
+                  <p className="text-xs text-success">{fmtUsd(Number(botActivity.profit_today))}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Loss Today</p>
+                  <p className="text-xs text-destructive">{fmtUsd(Number(botActivity.loss_today))}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* C: Activity Timeline */}
@@ -410,16 +531,16 @@ export default function AdminUserDetail() {
           <div className="space-y-1 max-h-[350px] overflow-y-auto pr-1">
             {activityTimeline.length > 0 ? activityTimeline.map((evt, i) => (
               <div key={i} className="flex items-center gap-3 py-2 border-b border-border/10 last:border-0 text-sm">
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <span className="px-1.5 py-0.5 rounded bg-secondary text-[10px] font-medium capitalize">{evt.type}</span>
-                  {evt.description && <span className="ml-2 text-xs text-muted-foreground">{evt.description}</span>}
+                  {evt.description && <span className="ml-2 text-xs text-muted-foreground truncate">{evt.description}</span>}
                 </div>
                 {evt.amount !== 0 && (
-                  <span className={`text-xs font-semibold ${evt.amount >= 0 ? "text-success" : "text-destructive"}`}>
+                  <span className={`text-xs font-semibold flex-shrink-0 ${evt.amount >= 0 ? "text-success" : "text-destructive"}`}>
                     {evt.amount >= 0 ? "+" : ""}{fmtUsd(evt.amount)}
                   </span>
                 )}
-                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">
                   {formatDistanceToNow(new Date(evt.time), { addSuffix: true })}
                 </span>
               </div>
@@ -483,7 +604,10 @@ export default function AdminUserDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adjust Balance</DialogTitle>
-            <DialogDescription>Ledger-safe balance adjustment for {profile.full_name || "this user"}. Current balance: {fmtUsd(financials.balance)}</DialogDescription>
+            <DialogDescription>
+              Ledger-safe balance adjustment for {profile.full_name || "this user"} ({userEmail || userId}).
+              Current balance: {fmtUsd(financials.balance)}
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -556,7 +680,7 @@ export default function AdminUserDetail() {
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              This will permanently delete <strong>{profile.full_name || "this user"}</strong> and all their data. This cannot be undone.
+              This will permanently delete <strong>{profile.full_name || "this user"}</strong> ({userEmail}) and all their data. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
