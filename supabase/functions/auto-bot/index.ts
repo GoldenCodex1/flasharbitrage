@@ -100,22 +100,9 @@ Deno.serve(async (req) => {
         // Safety cap: max amount per trade
         const safetyCap = availableCapital * (maxPerTradePercent / 100);
 
-        // Safety shutdown checks
+        // Skip cycle if insufficient capital (do NOT disable the bot)
         if (totalBalance < 1 || remainingCapital < 1) {
-          await supabase.from("bot_activity").update({ bot_enabled: false }).eq("user_id", bot.user_id);
-          await supabase.from("bot_logs").insert({
-            user_id: bot.user_id,
-            action_type: "bot_stopped",
-            category: "safety",
-            new_value: "bot_limit_reached: insufficient capital",
-          });
-          await supabase.from("notifications").insert({
-            user_id: bot.user_id,
-            title: "Auto Bot Paused",
-            message: "Bot paused: capital allocation exhausted or insufficient balance.",
-            type: "warning",
-          });
-          results.push({ user_id: bot.user_id, action: "shutdown", reason: "capital_exhausted" });
+          results.push({ user_id: bot.user_id, action: "skip", reason: "insufficient_capital", balance: totalBalance, remaining: remainingCapital });
           continue;
         }
 
