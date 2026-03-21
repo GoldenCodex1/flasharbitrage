@@ -1866,6 +1866,14 @@ export type Database = {
       }
       auto_transition_trades: { Args: never; Returns: Json }
       expire_plans: { Args: never; Returns: Json }
+      get_user_email: { Args: { _user_id: string }; Returns: string }
+      get_user_emails: {
+        Args: never
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
