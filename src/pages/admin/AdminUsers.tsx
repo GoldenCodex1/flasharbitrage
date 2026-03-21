@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
   Search, X, ChevronLeft, ChevronRight, Users, ShieldCheck, Ban,
-  DollarSign, AlertTriangle, UserCheck, Filter, RefreshCw,
+  DollarSign, AlertTriangle, Filter, RefreshCw, Mail,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,20 +27,22 @@ type Profile = {
   avatar_url: string | null;
   referral_code: string | null;
   created_at: string;
+  plan_id: string | null;
 };
 
 type UserWithFinancials = Profile & {
+  email: string;
   balance: number;
   totalDeposited: number;
   totalWithdrawn: number;
   lockedBalance: number;
   riskScore: number;
+  planName: string;
 };
 
 export default function AdminUsers() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -58,6 +60,24 @@ export default function AdminUsers() {
         .select("*")
         .order("created_at", { ascending: false });
       return (data ?? []) as Profile[];
+    },
+  });
+
+  // Fetch user emails via security definer function
+  const { data: userEmails } = useQuery({
+    queryKey: ["admin-users-emails"],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_user_emails");
+      return (data ?? []) as { user_id: string; email: string }[];
+    },
+  });
+
+  // Fetch plans for plan names
+  const { data: plans } = useQuery({
+    queryKey: ["admin-users-plans"],
+    queryFn: async () => {
+      const { data } = await supabase.from("plans").select("id, name");
+      return data ?? [];
     },
   });
 
@@ -99,6 +119,12 @@ export default function AdminUsers() {
   const enrichedUsers = useMemo<UserWithFinancials[]>(() => {
     if (!profiles) return [];
 
+    const emailMap = new Map<string, string>();
+    userEmails?.forEach((e) => emailMap.set(e.user_id, e.email));
+
+    const planMap = new Map<string, string>();
+    plans?.forEach((p) => planMap.set(p.id, p.name));
+
     const balanceMap = new Map<string, number>();
     const depositMap = new Map<string, number>();
     const withdrawMap = new Map<string, number>();
@@ -125,13 +151,15 @@ export default function AdminUsers() {
 
     return profiles.map((p) => ({
       ...p,
+      email: emailMap.get(p.user_id) ?? "—",
       balance: balanceMap.get(p.user_id) ?? 0,
       totalDeposited: depositMap.get(p.user_id) ?? 0,
       totalWithdrawn: withdrawMap.get(p.user_id) ?? 0,
       lockedBalance: lockedMap.get(p.user_id) ?? 0,
       riskScore: riskMap.get(p.user_id) ?? 0,
+      planName: p.plan_id ? (planMap.get(p.plan_id) ?? "—") : "—",
     }));
-  }, [profiles, allTransactions, activeEntries, riskScores]);
+  }, [profiles, allTransactions, activeEntries, riskScores, userEmails, plans]);
 
   // KPI calculations
   const kpis = useMemo(() => {
@@ -143,7 +171,7 @@ export default function AdminUsers() {
     return { total, kycPending, frozen, totalAUM, highRisk };
   }, [enrichedUsers]);
 
-  // Filtering
+  // Filtering - now also searches by email
   const filtered = useMemo(() => {
     return enrichedUsers.filter((u) => {
       if (filterStatus === "active" && u.is_frozen) return false;
@@ -157,6 +185,7 @@ export default function AdminUsers() {
         return (
           (u.full_name ?? "").toLowerCase().includes(q) ||
           u.user_id.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
           (u.referral_code ?? "").toLowerCase().includes(q)
         );
       }
@@ -178,6 +207,8 @@ export default function AdminUsers() {
     queryClient.invalidateQueries({ queryKey: ["admin-users-all-txns"] });
     queryClient.invalidateQueries({ queryKey: ["admin-users-active-entries"] });
     queryClient.invalidateQueries({ queryKey: ["admin-users-risk-scores"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-users-emails"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-users-plans"] });
     toast.success("Refreshed");
   };
 
@@ -236,7 +267,7 @@ export default function AdminUsers() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, ID, or referral code…"
+              placeholder="Search by name, email, ID, or referral code…"
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
               className="pl-9"
@@ -310,12 +341,12 @@ export default function AdminUsers() {
             <thead>
               <tr className="border-b border-border/30">
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">User</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden sm:table-cell">Email</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Plan</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">KYC</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden md:table-cell">Status</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Deposited</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Withdrawn</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground">Balance</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground hidden xl:table-cell">Locked</th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Deposited</th>
                 <th className="text-center px-4 py-3 text-xs font-medium text-muted-foreground hidden lg:table-cell">Risk</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground hidden xl:table-cell">Joined</th>
               </tr>
@@ -330,8 +361,17 @@ export default function AdminUsers() {
                   <td className="px-4 py-3">
                     <div>
                       <p className="font-medium text-sm">{u.full_name || "—"}</p>
-                      <p className="font-mono text-[10px] text-muted-foreground">{u.user_id.slice(0, 12)}…</p>
+                      <p className="font-mono text-[10px] text-muted-foreground sm:hidden">{u.email}</p>
                     </div>
+                  </td>
+                  <td className="px-4 py-3 hidden sm:table-cell">
+                    <div className="flex items-center gap-1.5">
+                      <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                      <span className="text-xs text-muted-foreground truncate max-w-[180px]">{u.email}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <span className="text-xs font-medium">{u.planName}</span>
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <span className={
@@ -344,14 +384,12 @@ export default function AdminUsers() {
                       {u.is_frozen ? "Frozen" : "Active"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right hidden lg:table-cell text-muted-foreground">{fmtUsd(u.totalDeposited)}</td>
-                  <td className="px-4 py-3 text-right hidden lg:table-cell text-muted-foreground">{fmtUsd(u.totalWithdrawn)}</td>
                   <td className="px-4 py-3 text-right">
                     <span className={u.balance >= 0 ? "text-success font-semibold" : "text-destructive font-semibold"}>
                       {fmtUsd(u.balance)}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right hidden xl:table-cell text-muted-foreground">{fmtUsd(u.lockedBalance)}</td>
+                  <td className="px-4 py-3 text-right hidden lg:table-cell text-muted-foreground">{fmtUsd(u.totalDeposited)}</td>
                   <td className="px-4 py-3 text-center hidden lg:table-cell">{riskBadge(u.riskScore)}</td>
                   <td className="px-4 py-3 hidden xl:table-cell text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(u.created_at), { addSuffix: true })}
