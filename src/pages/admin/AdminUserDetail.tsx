@@ -605,6 +605,16 @@ export default function AdminUserDetail() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2">
               <div className="grid grid-cols-2 gap-2">
                 <Button
+                  variant={isUserAdmin ? "destructive" : "default"}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={toggleAdminRole}
+                  disabled={adminToggling || userId === adminUser?.id}
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  {adminToggling ? "Updating…" : isUserAdmin ? "Revoke Admin" : "Make Admin"}
+                </Button>
+                <Button
                   variant={profile.is_frozen ? "default" : "destructive"}
                   size="sm"
                   className="gap-1.5 text-xs"
