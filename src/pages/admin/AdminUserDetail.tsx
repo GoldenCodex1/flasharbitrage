@@ -44,6 +44,7 @@ export default function AdminUserDetail() {
   const [deleting, setDeleting] = useState(false);
 
   const [showDanger, setShowDanger] = useState(false);
+  const [adminToggling, setAdminToggling] = useState(false);
 
   // Fetch profile
   const { data: profile } = useQuery({
@@ -96,6 +97,23 @@ export default function AdminUserDetail() {
       return data;
     },
   });
+
+  // Check if user is admin
+  const { data: userRole } = useQuery({
+    queryKey: ["admin-user-role", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId!)
+        .eq("role", "admin")
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const isUserAdmin = !!userRole;
 
   // Transactions
   const { data: transactions } = useQuery({
@@ -293,6 +311,28 @@ export default function AdminUserDetail() {
     navigate("/admin/users");
   };
 
+  const toggleAdminRole = async () => {
+    if (!userId) return;
+    setAdminToggling(true);
+    try {
+      if (isUserAdmin) {
+        const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
+        if (error) throw error;
+        await logAction("users/role", "admin_role", "admin", "user");
+        toast.success("Admin privileges revoked");
+      } else {
+        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" });
+        if (error) throw error;
+        await logAction("users/role", "admin_role", "user", "admin");
+        toast.success("User promoted to admin");
+      }
+      queryClient.invalidateQueries({ queryKey: ["admin-user-role", userId] });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update role");
+    }
+    setAdminToggling(false);
+  };
+
   const reset2FA = async () => {
     if (!userId) return;
     await supabase.from("totp_secrets").delete().eq("user_id", userId);
@@ -354,6 +394,7 @@ export default function AdminUserDetail() {
             profile.kyc_status === "approved" ? "status-badge-success" :
             profile.kyc_status === "pending" ? "status-badge-warning" : "status-badge-danger"
           }>KYC: {profile.kyc_status}</span>
+          {isUserAdmin && <span className="status-badge-success">Admin</span>}
           {riskScoreVal > 70 ? (
             <span className="status-badge-danger">Risk: {riskScoreVal}</span>
           ) : riskScoreVal > 30 ? (
@@ -564,6 +605,16 @@ export default function AdminUserDetail() {
           {showDanger && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3 pt-2">
               <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant={isUserAdmin ? "destructive" : "default"}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={toggleAdminRole}
+                  disabled={adminToggling || userId === adminUser?.id}
+                >
+                  <Shield className="h-3.5 w-3.5" />
+                  {adminToggling ? "Updating…" : isUserAdmin ? "Revoke Admin" : "Make Admin"}
+                </Button>
                 <Button
                   variant={profile.is_frozen ? "default" : "destructive"}
                   size="sm"

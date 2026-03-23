@@ -55,8 +55,8 @@ export default function FooterPage() {
       <div className="pt-24 pb-16 max-w-3xl mx-auto px-4 sm:px-6">
         <h1 className="text-3xl font-display font-bold mb-8">{page.title}</h1>
         <div
-          className="prose prose-invert max-w-none text-muted-foreground [&_h2]:text-foreground [&_h2]:font-display [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_p]:mb-4 [&_a]:text-primary"
-          dangerouslySetInnerHTML={{ __html: page.content }}
+          className="prose prose-invert max-w-none text-muted-foreground [&_h2]:text-foreground [&_h2]:font-display [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_p]:mb-4 [&_p]:leading-relaxed [&_a]:text-primary [&_br]:block [&_br]:mb-2 whitespace-pre-line [&>p]:whitespace-pre-line"
+          dangerouslySetInnerHTML={{ __html: page.content.replace(/\n/g, '<br/>') }}
         />
       </div>
       <HomepageFooter />

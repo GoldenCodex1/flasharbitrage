@@ -79,7 +79,7 @@ export default function HomepageFooter() {
         <div className="glow-line mb-6" />
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <SiteLogo size="sm" />
-          <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} ArbAI. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} FlashArbitrage. All rights reserved.</p>
         </div>
       </div>
     </footer>
