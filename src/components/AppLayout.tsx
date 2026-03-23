@@ -51,12 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 border-b border-border/50 backdrop-blur-xl bg-background/80">
         <div className="max-w-[1400px] mx-auto flex items-center justify-between px-4 h-16">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-display font-bold text-sm">A</span>
-            </div>
-            <span className="font-display font-bold text-lg text-foreground">
-              Arb<span className="text-primary">AI</span>
-            </span>
+            <SiteLogo size="md" />
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">

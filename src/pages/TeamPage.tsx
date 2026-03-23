@@ -36,7 +36,7 @@ export default function TeamPage() {
         <div className="text-center mb-12">
           <h1 className="text-3xl sm:text-4xl font-display font-bold mb-4">Our Team</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Meet the people behind ArbAI who are building the future of automated crypto trading.
+            Meet the people behind FlashArbitrage who are building the future of automated crypto trading.
           </p>
         </div>
 
