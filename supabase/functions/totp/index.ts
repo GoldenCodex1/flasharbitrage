@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
       if (!row) return json({ error: "No TOTP setup found" }, 400);
 
       const totp = new OTPAuth.TOTP({
-        issuer: "ArbAI",
+        issuer: "FlashArbitrage",
         label: userEmail,
         algorithm: "SHA1",
         digits: 6,
