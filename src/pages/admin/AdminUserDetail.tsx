@@ -394,6 +394,7 @@ export default function AdminUserDetail() {
             profile.kyc_status === "approved" ? "status-badge-success" :
             profile.kyc_status === "pending" ? "status-badge-warning" : "status-badge-danger"
           }>KYC: {profile.kyc_status}</span>
+          {isUserAdmin && <span className="status-badge-success">Admin</span>}
           {riskScoreVal > 70 ? (
             <span className="status-badge-danger">Risk: {riskScoreVal}</span>
           ) : riskScoreVal > 30 ? (
