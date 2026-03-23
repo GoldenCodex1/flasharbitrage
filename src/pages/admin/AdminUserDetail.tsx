@@ -98,6 +98,23 @@ export default function AdminUserDetail() {
     },
   });
 
+  // Check if user is admin
+  const { data: userRole } = useQuery({
+    queryKey: ["admin-user-role", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId!)
+        .eq("role", "admin")
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const isUserAdmin = !!userRole;
+
   // Transactions
   const { data: transactions } = useQuery({
     queryKey: ["admin-user-txns", userId],
