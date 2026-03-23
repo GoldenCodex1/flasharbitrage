@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       if (!row || !row.verified) return json({ error: "2FA not set up" }, 400);
 
       const totp = new OTPAuth.TOTP({
-        issuer: "ArbAI",
+        issuer: "FlashArbitrage",
         label: userEmail,
         algorithm: "SHA1",
         digits: 6,
