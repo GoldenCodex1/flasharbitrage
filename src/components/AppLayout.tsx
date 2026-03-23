@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import SiteLogo from "@/components/SiteLogo";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard,
