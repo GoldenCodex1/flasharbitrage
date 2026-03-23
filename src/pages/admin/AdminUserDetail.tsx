@@ -44,6 +44,7 @@ export default function AdminUserDetail() {
   const [deleting, setDeleting] = useState(false);
 
   const [showDanger, setShowDanger] = useState(false);
+  const [adminToggling, setAdminToggling] = useState(false);
 
   // Fetch profile
   const { data: profile } = useQuery({

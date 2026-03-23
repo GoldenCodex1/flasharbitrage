@@ -1,30 +1,24 @@
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import fallbackLogo from "@/assets/site-logo.jpg";
 
 interface SiteLogoProps {
   size?: "sm" | "md" | "lg";
   showText?: boolean;
 }
 
-export default function SiteLogo({ size = "md", showText = true }: SiteLogoProps) {
+export default function SiteLogo({ size = "md", showText = false }: SiteLogoProps) {
   const { logo_url } = useSiteSettings();
 
-  const sizeMap = { sm: "w-6 h-6", md: "w-8 h-8", lg: "w-10 h-10" };
-  const textSizeMap = { sm: "text-sm", md: "text-lg", lg: "text-xl" };
+  const heightMap = { sm: "h-6", md: "h-8", lg: "h-10" };
+  const src = logo_url || fallbackLogo;
 
   return (
     <div className="flex items-center gap-2">
-      {logo_url ? (
-        <img src={logo_url} alt="Logo" className={`${sizeMap[size]} object-contain rounded-lg`} />
-      ) : (
-        <div className={`${sizeMap[size]} rounded-lg bg-primary flex items-center justify-center`}>
-          <span className="text-primary-foreground font-display font-bold text-sm">A</span>
-        </div>
-      )}
-      {showText && (
-        <span className={`font-display font-bold ${textSizeMap[size]}`}>
-          Arb<span className="text-primary">AI</span>
-        </span>
-      )}
+      <img
+        src={src}
+        alt="FlashArbitrage"
+        className={`${heightMap[size]} w-auto object-contain`}
+      />
     </div>
   );
 }
