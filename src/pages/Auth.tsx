@@ -238,7 +238,7 @@ export default function Auth() {
                   type="text"
                   value={referralCode}
                   onChange={(e) => setReferralCode(e.target.value)}
-                  placeholder="ARBAI-XXXXXX"
+                  placeholder="FA-XXXXXX"
                   className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground font-mono placeholder:text-muted-foreground"
                 />
               </div>

@@ -33,7 +33,7 @@ export default function FaqSection() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
           <h2 className="font-display text-3xl sm:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
-          <p className="text-muted-foreground">Everything you need to know about ArbAI.</p>
+          <p className="text-muted-foreground">Everything you need to know about FlashArbitrage.</p>
         </motion.div>
         <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((faq) => (

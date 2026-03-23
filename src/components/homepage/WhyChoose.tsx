@@ -6,7 +6,7 @@ import type { ElementType } from "react";
 const iconMap: Record<string, ElementType> = { Layers, Bot, ShieldCheck, CheckCircle, Zap };
 
 const defaults = {
-  title: "Why Choose ArbAI",
+  title: "Why Choose FlashArbitrage",
   subtitle: "Built for serious investors who value security, automation, and transparency.",
   items: [
     { icon: "Layers", title: "Hybrid Deposit System", desc: "Support for both cryptocurrency deposits and manual bank transfer approvals." },

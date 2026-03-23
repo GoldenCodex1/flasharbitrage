@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     if (action === "setup") {
       // Generate a new TOTP secret
       const totp = new OTPAuth.TOTP({
-        issuer: "ArbAI",
+        issuer: "FlashArbitrage",
         label: userEmail,
         algorithm: "SHA1",
         digits: 6,
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
       if (!row) return json({ error: "No TOTP setup found" }, 400);
 
       const totp = new OTPAuth.TOTP({
-        issuer: "ArbAI",
+        issuer: "FlashArbitrage",
         label: userEmail,
         algorithm: "SHA1",
         digits: 6,
@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
       if (!row || !row.verified) return json({ error: "2FA not set up" }, 400);
 
       const totp = new OTPAuth.TOTP({
-        issuer: "ArbAI",
+        issuer: "FlashArbitrage",
         label: userEmail,
         algorithm: "SHA1",
         digits: 6,

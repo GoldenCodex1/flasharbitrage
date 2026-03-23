@@ -14,7 +14,7 @@ interface HeroData {
 
 const defaults: HeroData = {
   headline: "Smart Arbitrage.",
-  subheadline: "ArbAI combines AI-assisted arbitrage strategies with automated execution to generate consistent ROI.",
+  subheadline: "FlashArbitrage combines AI-assisted arbitrage strategies with automated execution to generate consistent ROI.",
   primary_cta_text: "Get Started",
   secondary_cta_text: "Login",
 };

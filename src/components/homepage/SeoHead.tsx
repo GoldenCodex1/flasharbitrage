@@ -11,9 +11,9 @@ interface SeoData {
 }
 
 const defaults: SeoData = {
-  meta_title: "ArbAI – AI-Powered Crypto Arbitrage",
+  meta_title: "FlashArbitrage – AI-Powered Crypto Arbitrage",
   meta_description: "Automated crypto arbitrage trading platform powered by AI.",
-  og_title: "ArbAI – AI-Powered Crypto Arbitrage",
+  og_title: "FlashArbitrage – AI-Powered Crypto Arbitrage",
   og_description: "Automated crypto arbitrage trading platform powered by AI.",
   og_image: "",
   keywords: "crypto, arbitrage, AI, trading",
