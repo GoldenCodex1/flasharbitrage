@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     if (action === "setup") {
       // Generate a new TOTP secret
       const totp = new OTPAuth.TOTP({
-        issuer: "ArbAI",
+        issuer: "FlashArbitrage",
         label: userEmail,
         algorithm: "SHA1",
         digits: 6,
