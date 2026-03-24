@@ -1881,6 +1881,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_auto_deposit_enabled: { Args: never; Returns: boolean }
       join_trade: {
         Args: {
           _amount?: number
