@@ -124,8 +124,8 @@ export default function Deposit() {
       toast.error("Enter a valid deposit amount");
       return;
     }
-    if (Number(autoAmount) < 12) {
-      toast.error("Minimum deposit amount is $12 USD");
+    if (Number(autoAmount) < MIN_AUTO_DEPOSIT) {
+      toast.error(`Minimum deposit amount is $${MIN_AUTO_DEPOSIT} USD`);
       return;
     }
 
