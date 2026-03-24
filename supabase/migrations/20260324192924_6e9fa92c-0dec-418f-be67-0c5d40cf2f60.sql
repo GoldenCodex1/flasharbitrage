@@ -1,0 +1,1 @@
+ALTER TABLE public.system_financial_rules ADD COLUMN IF NOT EXISTS min_auto_deposit numeric NOT NULL DEFAULT 12;
