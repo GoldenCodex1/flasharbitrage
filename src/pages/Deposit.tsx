@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Zap, Wallet, Copy, Upload, Check, QrCode, ChevronDown, ChevronUp } from "lucide-react";
+import { Zap, Wallet, Copy, Check, ChevronDown, ChevronUp, ExternalLink, Loader2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,11 @@ export default function Deposit() {
   const [txHash, setTxHash] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
+
+  // Auto deposit state
+  const [autoAmount, setAutoAmount] = useState("");
+  const [autoCurrency, setAutoCurrency] = useState("usdttrc20");
+  const [creatingPayment, setCreatingPayment] = useState(false);
 
   const toggle = (method: string) => setExpandedMethod(expandedMethod === method ? null : method);
 
@@ -39,6 +44,47 @@ export default function Deposit() {
       return data ?? [];
     },
     enabled: !!user,
+  });
+
+  // Check if NOWPayments is configured (gateway active with API key)
+  const { data: autoDepositEnabled } = useQuery({
+    queryKey: ["nowpayments-configured"],
+    queryFn: async () => {
+      const { data: gw } = await supabase
+        .from("api_gateways")
+        .select("id, active")
+        .ilike("provider_name", "%nowpayment%")
+        .eq("active", true)
+        .maybeSingle();
+      if (!gw) return false;
+      const { data: creds } = await supabase
+        .from("api_credentials")
+        .select("encrypted_api_key")
+        .eq("gateway_id", gw.id)
+        .maybeSingle();
+      return !!(creds?.encrypted_api_key && creds.encrypted_api_key.length > 5);
+    },
+  });
+
+  // Get allowed currencies from config
+  const { data: allowedCurrencies } = useQuery({
+    queryKey: ["nowpayments-currencies"],
+    queryFn: async () => {
+      const { data: gw } = await supabase
+        .from("api_gateways")
+        .select("id")
+        .ilike("provider_name", "%nowpayment%")
+        .eq("active", true)
+        .maybeSingle();
+      if (!gw) return [];
+      const { data: creds } = await supabase
+        .from("api_credentials")
+        .select("allowed_currencies")
+        .eq("gateway_id", gw.id)
+        .maybeSingle();
+      return creds?.allowed_currencies || ["USDT", "BTC", "ETH"];
+    },
+    enabled: !!autoDepositEnabled,
   });
 
   const selectedWallet = wallets?.find((w) => w.id === selectedWalletId) ?? wallets?.[0];
@@ -87,6 +133,54 @@ export default function Deposit() {
     }
   };
 
+  const handleAutoDeposit = async () => {
+    if (!autoAmount || Number(autoAmount) <= 0) {
+      toast.error("Enter a valid deposit amount");
+      return;
+    }
+    if (Number(autoAmount) < 5) {
+      toast.error("Minimum deposit is $5");
+      return;
+    }
+
+    setCreatingPayment(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-payment", {
+        body: { amount: Number(autoAmount), currency: autoCurrency },
+      });
+
+      if (error) throw error;
+      if (!data?.success) {
+        toast.error(data?.error || "Failed to create payment");
+        return;
+      }
+
+      // Open NOWPayments invoice in new tab
+      if (data.invoice_url) {
+        window.open(data.invoice_url, "_blank");
+        toast.success("Payment page opened. Complete the payment to credit your account automatically.");
+      } else {
+        toast.error("No payment URL received");
+      }
+    } catch (err: any) {
+      console.error("Auto deposit error:", err);
+      toast.error(err.message || "Failed to create payment");
+    } finally {
+      setCreatingPayment(false);
+    }
+  };
+
+  const currencyOptions: Record<string, string> = {
+    USDT: "usdttrc20",
+    BTC: "btc",
+    ETH: "eth",
+    BNB: "bnbbsc",
+    SOL: "sol",
+    TRX: "trx",
+    MATIC: "maticpolygon",
+    LTC: "ltc",
+  };
+
   const statusBadge = (status: string) => {
     switch (status) {
       case "approved": return "status-badge-success";
@@ -100,26 +194,79 @@ export default function Deposit() {
       <h1 className="font-display font-bold text-2xl">Deposit Funds</h1>
       <p className="text-sm text-muted-foreground">Choose a deposit method below.</p>
 
-      {/* Method 1 — NowPayments */}
-      <div className="glass-card overflow-hidden">
-        <button onClick={() => toggle("auto")} className="w-full flex items-center justify-between p-5 hover:bg-secondary/20 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary" />
+      {/* Method 1 — NowPayments Auto */}
+      {autoDepositEnabled && (
+        <div className="glass-card overflow-hidden">
+          <button onClick={() => toggle("auto")} className="w-full flex items-center justify-between p-5 hover:bg-secondary/20 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/15 flex items-center justify-center">
+                <Zap className="w-5 h-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="font-display font-semibold text-sm">Automatic Deposit</p>
+                <p className="text-xs text-muted-foreground">Pay with crypto — instant credit on confirmation</p>
+              </div>
             </div>
-            <div className="text-left">
-              <p className="font-display font-semibold text-sm">Automatic Deposit</p>
-              <p className="text-xs text-muted-foreground">Via NowPayments — instant credit</p>
-            </div>
-          </div>
-          {expandedMethod === "auto" ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
-        </button>
-        {expandedMethod === "auto" && (
-          <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} className="border-t border-border/30 p-5 space-y-4">
-            <p className="text-sm text-muted-foreground">NowPayments integration coming soon. Use manual deposit for now.</p>
-          </motion.div>
-        )}
-      </div>
+            {expandedMethod === "auto" ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+          </button>
+          {expandedMethod === "auto" && (
+            <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} className="border-t border-border/30 p-5 space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Enter the amount in USD and select your preferred cryptocurrency. You'll be redirected to a secure payment page.
+              </p>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Amount (USD)</label>
+                <input
+                  type="number"
+                  placeholder="100.00"
+                  min="5"
+                  value={autoAmount}
+                  onChange={(e) => setAutoAmount(e.target.value)}
+                  className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1.5 block">Pay with</label>
+                <select
+                  value={autoCurrency}
+                  onChange={(e) => setAutoCurrency(e.target.value)}
+                  className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2 text-sm text-foreground"
+                >
+                  {(allowedCurrencies || ["USDT", "BTC", "ETH"]).map((c) => (
+                    <option key={c} value={currencyOptions[c] || c.toLowerCase()}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={handleAutoDeposit}
+                disabled={creatingPayment}
+                className="w-full py-2.5 rounded-lg font-semibold text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {creatingPayment ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Creating Payment...
+                  </>
+                ) : (
+                  <>
+                    <ExternalLink className="w-4 h-4" />
+                    Pay Now
+                  </>
+                )}
+              </button>
+
+              <p className="text-[10px] text-muted-foreground text-center">
+                You'll be redirected to NOWPayments. Your balance updates automatically once payment is confirmed.
+              </p>
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {/* Method 2 — Manual */}
       <div className="glass-card overflow-hidden">
@@ -202,7 +349,7 @@ export default function Deposit() {
               <div key={d.id} className="flex items-center justify-between px-4 py-3">
                 <div>
                   <p className="text-sm font-medium">${Number(d.amount).toLocaleString()} — {d.currency}</p>
-                  <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(d.created_at), { addSuffix: true })}</p>
+                  <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(d.created_at), { addSuffix: true })} · {d.method}</p>
                 </div>
                 <span className={statusBadge(d.status)}>{d.status}</span>
               </div>
