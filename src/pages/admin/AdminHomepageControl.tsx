@@ -583,6 +583,33 @@ export default function AdminHomepageControl() {
           </div>
         </div>
       )}
+
+      {/* ── SOCIAL LINKS ── */}
+      {activeTab === "social" && (
+        <div className="glass-card p-5 sm:p-6 space-y-4">
+          <h3 className="flex items-center gap-2 text-lg font-display font-semibold">
+            <Share2 className="w-5 h-5 text-primary" /> Social Media Links
+          </h3>
+          <p className="text-xs text-muted-foreground">Enter the full URL for each social platform. Leave blank to hide from footer.</p>
+          <div className="space-y-3">
+            {Object.entries(socialLabels).map(([key, label]) => (
+              <div key={key}>
+                <Label className="text-xs text-muted-foreground mb-1 block">{label}</Label>
+                <Input
+                  value={socialLinks[key] || ""}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, [key]: e.target.value })}
+                  placeholder={`https://${label.toLowerCase().replace(/ \/ /g, "").replace(/ /g, "")}.com/...`}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={saveSocialLinks} disabled={saving === "social"}>
+              <Save className="w-4 h-4 mr-2" /> Save Social Links
+            </Button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
