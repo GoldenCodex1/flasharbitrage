@@ -46,46 +46,21 @@ export default function Deposit() {
     enabled: !!user,
   });
 
-  // Check if NOWPayments is configured (gateway active with API key)
+  // Check if NOWPayments is configured using secure DB function (no RLS issues)
   const { data: autoDepositEnabled } = useQuery({
     queryKey: ["nowpayments-configured"],
     queryFn: async () => {
-      const { data: gw } = await supabase
-        .from("api_gateways")
-        .select("id, active")
-        .ilike("provider_name", "%nowpayment%")
-        .eq("active", true)
-        .maybeSingle();
-      if (!gw) return false;
-      const { data: creds } = await supabase
-        .from("api_credentials")
-        .select("encrypted_api_key")
-        .eq("gateway_id", gw.id)
-        .maybeSingle();
-      return !!(creds?.encrypted_api_key && creds.encrypted_api_key.length > 5);
+      const { data, error } = await supabase.rpc("is_auto_deposit_enabled");
+      if (error) {
+        console.error("Auto deposit check error:", error);
+        return false;
+      }
+      return !!data;
     },
   });
 
-  // Get allowed currencies from config
-  const { data: allowedCurrencies } = useQuery({
-    queryKey: ["nowpayments-currencies"],
-    queryFn: async () => {
-      const { data: gw } = await supabase
-        .from("api_gateways")
-        .select("id")
-        .ilike("provider_name", "%nowpayment%")
-        .eq("active", true)
-        .maybeSingle();
-      if (!gw) return [];
-      const { data: creds } = await supabase
-        .from("api_credentials")
-        .select("allowed_currencies")
-        .eq("gateway_id", gw.id)
-        .maybeSingle();
-      return creds?.allowed_currencies || ["USDT", "BTC", "ETH"];
-    },
-    enabled: !!autoDepositEnabled,
-  });
+  // Default currencies for auto deposit
+  const allowedCurrencies = ["USDT", "BTC", "ETH"];
 
   const selectedWallet = wallets?.find((w) => w.id === selectedWalletId) ?? wallets?.[0];
 
