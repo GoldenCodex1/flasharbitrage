@@ -1310,6 +1310,7 @@ export type Database = {
           deposit_confirmation_required: boolean
           id: string
           manual_withdrawal_approval: boolean
+          min_auto_deposit: number
           min_deposit: number
           min_withdrawal: number
           updated_at: string
@@ -1319,6 +1320,7 @@ export type Database = {
           deposit_confirmation_required?: boolean
           id?: string
           manual_withdrawal_approval?: boolean
+          min_auto_deposit?: number
           min_deposit?: number
           min_withdrawal?: number
           updated_at?: string
@@ -1328,6 +1330,7 @@ export type Database = {
           deposit_confirmation_required?: boolean
           id?: string
           manual_withdrawal_approval?: boolean
+          min_auto_deposit?: number
           min_deposit?: number
           min_withdrawal?: number
           updated_at?: string

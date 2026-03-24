@@ -34,6 +34,7 @@ export default function AdminSystemSettings() {
             <ConfigField label="Withdrawal Fee" type="number" value={data.withdrawal_fee_percent} onChange={(v) => update("withdrawal_fee_percent", Number(v))} suffix="%" />
             <ConfigField label="Deposit Confirmation Required" type="toggle" value={data.deposit_confirmation_required} onChange={(v) => update("deposit_confirmation_required", v)} />
             <ConfigField label="Manual Withdrawal Approval" type="toggle" value={data.manual_withdrawal_approval} onChange={(v) => update("manual_withdrawal_approval", v)} />
+            <ConfigField label="Min Auto Deposit (USD)" type="number" value={data.min_auto_deposit} onChange={(v) => update("min_auto_deposit", Number(v))} suffix="$" hint="Minimum amount for automatic crypto deposits" />
           </>
         )}
       </InfraSection>

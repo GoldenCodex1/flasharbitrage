@@ -59,6 +59,17 @@ export default function Deposit() {
     },
   });
 
+  // Fetch configurable minimum auto deposit from financial rules
+  const { data: minAutoDeposit } = useQuery({
+    queryKey: ["min-auto-deposit"],
+    queryFn: async () => {
+      const { data } = await supabase.from("system_financial_rules" as any).select("min_auto_deposit").limit(1).maybeSingle();
+      return (data as any)?.min_auto_deposit ?? 12;
+    },
+  });
+
+  const MIN_AUTO_DEPOSIT = minAutoDeposit ?? 12;
+
   // Default currencies for auto deposit
   const allowedCurrencies = ["USDT", "BTC", "ETH"];
 
@@ -113,8 +124,8 @@ export default function Deposit() {
       toast.error("Enter a valid deposit amount");
       return;
     }
-    if (Number(autoAmount) < 12) {
-      toast.error("Minimum deposit amount is $12 USD");
+    if (Number(autoAmount) < MIN_AUTO_DEPOSIT) {
+      toast.error(`Minimum deposit amount is $${MIN_AUTO_DEPOSIT} USD`);
       return;
     }
 
@@ -194,14 +205,14 @@ export default function Deposit() {
                 <label className="text-xs text-muted-foreground mb-1.5 block">Amount (USD)</label>
                 <input
                   type="number"
-                  placeholder="12.00"
-                  min="12"
+                  placeholder={`${MIN_AUTO_DEPOSIT}.00`}
+                  min={MIN_AUTO_DEPOSIT}
                   value={autoAmount}
                   onChange={(e) => setAutoAmount(e.target.value)}
-                  className={`w-full bg-secondary border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground ${autoAmount && Number(autoAmount) < 12 ? 'border-destructive' : 'border-border/30'}`}
+                  className={`w-full bg-secondary border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground ${autoAmount && Number(autoAmount) < MIN_AUTO_DEPOSIT ? 'border-destructive' : 'border-border/30'}`}
                 />
-                {autoAmount && Number(autoAmount) < 12 && (
-                  <p className="text-xs text-destructive mt-1">Minimum deposit amount is $12 USD</p>
+                {autoAmount && Number(autoAmount) < MIN_AUTO_DEPOSIT && (
+                  <p className="text-xs text-destructive mt-1">Minimum deposit amount is ${MIN_AUTO_DEPOSIT} USD</p>
                 )}
               </div>
 
