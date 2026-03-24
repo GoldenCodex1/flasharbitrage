@@ -49,6 +49,7 @@ export default function ProviderConfig() {
     encrypted_api_key: "",
     encrypted_ipn_secret: "",
     webhook_secret: "",
+    webhook_url: "",
     auto_confirm: false,
     allowed_currencies: ["USDT", "BTC", "ETH"],
     allowed_networks: ["TRC20", "ERC20", "BEP20"],
