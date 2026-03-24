@@ -59,6 +59,17 @@ export default function Deposit() {
     },
   });
 
+  // Fetch configurable minimum auto deposit from financial rules
+  const { data: minAutoDeposit } = useQuery({
+    queryKey: ["min-auto-deposit"],
+    queryFn: async () => {
+      const { data } = await supabase.from("system_financial_rules" as any).select("min_auto_deposit").limit(1).maybeSingle();
+      return (data as any)?.min_auto_deposit ?? 12;
+    },
+  });
+
+  const MIN_AUTO_DEPOSIT = minAutoDeposit ?? 12;
+
   // Default currencies for auto deposit
   const allowedCurrencies = ["USDT", "BTC", "ETH"];
 
