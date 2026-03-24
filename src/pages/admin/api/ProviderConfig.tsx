@@ -107,7 +107,8 @@ export default function ProviderConfig() {
     arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
 
   const gwName = gateways?.find((g) => g.id === selectedGw)?.provider_name || "Provider";
-  const webhookUrl = `https://zwxbyrbfngfbteboqkmt.supabase.co/functions/v1/nowpayments-webhook`;
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "iknyoyblnyenbrfzffxm";
+  const webhookUrl = `https://${projectId}.supabase.co/functions/v1/nowpayments-webhook`;
 
   return (
     <div className="glass-card p-5 space-y-5">
