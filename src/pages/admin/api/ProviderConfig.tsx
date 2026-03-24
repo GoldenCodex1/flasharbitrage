@@ -84,6 +84,7 @@ export default function ProviderConfig() {
         encrypted_api_key: form.encrypted_api_key,
         encrypted_ipn_secret: form.encrypted_ipn_secret,
         webhook_secret: form.webhook_secret,
+        webhook_url: form.webhook_url,
         auto_confirm: form.auto_confirm,
         allowed_currencies: form.allowed_currencies,
         allowed_networks: form.allowed_networks,
