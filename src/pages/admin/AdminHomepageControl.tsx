@@ -29,6 +29,7 @@ export default function AdminHomepageControl() {
   const [logoUrl, setLogoUrl] = useState("");
   const [faviconUrl, setFaviconUrl] = useState("");
   const [sections, setSections] = useState<SectionData[]>([]);
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("branding");
 
