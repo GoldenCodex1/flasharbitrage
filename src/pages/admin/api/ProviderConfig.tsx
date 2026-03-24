@@ -58,10 +58,13 @@ export default function ProviderConfig() {
 
   useEffect(() => {
     if (creds) {
+      const pid = import.meta.env.VITE_SUPABASE_PROJECT_ID || "iknyoyblnyenbrfzffxm";
+      const defaultWebhookUrl = `https://${pid}.supabase.co/functions/v1/nowpayments-webhook`;
       setForm({
         encrypted_api_key: creds.encrypted_api_key || "",
         encrypted_ipn_secret: creds.encrypted_ipn_secret || "",
         webhook_secret: creds.webhook_secret || "",
+        webhook_url: creds.webhook_url || defaultWebhookUrl,
         auto_confirm: creds.auto_confirm,
         allowed_currencies: creds.allowed_currencies || [],
         allowed_networks: creds.allowed_networks || [],
