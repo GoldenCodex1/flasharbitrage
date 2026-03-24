@@ -155,10 +155,10 @@ export default function Deposit() {
         return;
       }
 
-      // Open NOWPayments invoice in new tab
+      // Redirect to NOWPayments invoice (uses location.href to avoid iOS popup blocker)
       if (data.invoice_url) {
-        window.open(data.invoice_url, "_blank");
-        toast.success("Payment page opened. Complete the payment to credit your account automatically.");
+        toast.success("Redirecting to payment page...");
+        window.location.href = data.invoice_url;
       } else {
         toast.error("No payment URL received");
       }
