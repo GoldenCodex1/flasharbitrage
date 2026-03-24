@@ -49,6 +49,7 @@ export default function ProviderConfig() {
     encrypted_api_key: "",
     encrypted_ipn_secret: "",
     webhook_secret: "",
+    webhook_url: "",
     auto_confirm: false,
     allowed_currencies: ["USDT", "BTC", "ETH"],
     allowed_networks: ["TRC20", "ERC20", "BEP20"],
@@ -58,10 +59,13 @@ export default function ProviderConfig() {
 
   useEffect(() => {
     if (creds) {
+      const pid = import.meta.env.VITE_SUPABASE_PROJECT_ID || "iknyoyblnyenbrfzffxm";
+      const defaultWebhookUrl = `https://${pid}.supabase.co/functions/v1/nowpayments-webhook`;
       setForm({
         encrypted_api_key: creds.encrypted_api_key || "",
         encrypted_ipn_secret: creds.encrypted_ipn_secret || "",
         webhook_secret: creds.webhook_secret || "",
+        webhook_url: creds.webhook_url || defaultWebhookUrl,
         auto_confirm: creds.auto_confirm,
         allowed_currencies: creds.allowed_currencies || [],
         allowed_networks: creds.allowed_networks || [],
@@ -80,6 +84,7 @@ export default function ProviderConfig() {
         encrypted_api_key: form.encrypted_api_key,
         encrypted_ipn_secret: form.encrypted_ipn_secret,
         webhook_secret: form.webhook_secret,
+        webhook_url: form.webhook_url,
         auto_confirm: form.auto_confirm,
         allowed_currencies: form.allowed_currencies,
         allowed_networks: form.allowed_networks,
@@ -107,7 +112,8 @@ export default function ProviderConfig() {
     arr.includes(val) ? arr.filter((v) => v !== val) : [...arr, val];
 
   const gwName = gateways?.find((g) => g.id === selectedGw)?.provider_name || "Provider";
-  const webhookUrl = `https://zwxbyrbfngfbteboqkmt.supabase.co/functions/v1/nowpayments-webhook`;
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID || "iknyoyblnyenbrfzffxm";
+  const webhookUrl = `https://${projectId}.supabase.co/functions/v1/nowpayments-webhook`;
 
   return (
     <div className="glass-card p-5 space-y-5">
@@ -188,12 +194,13 @@ export default function ProviderConfig() {
 
           {/* Webhook URL */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Webhook URL (Read-Only)</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Webhook URL (auto-filled)</label>
             <input
-              value={webhookUrl}
+              value={form.webhook_url}
               readOnly
               className="w-full bg-muted border border-border/30 rounded-lg px-3 py-2 text-sm text-muted-foreground font-mono cursor-not-allowed"
             />
+            <p className="text-[10px] text-muted-foreground mt-1">Copy this URL into your NOWPayments IPN settings.</p>
           </div>
 
           {/* Webhook Secret */}
