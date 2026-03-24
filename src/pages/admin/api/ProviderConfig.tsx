@@ -134,7 +134,20 @@ export default function ProviderConfig() {
       </div>
 
       {!creds && selectedGw && (
-        <p className="text-sm text-muted-foreground">No credentials found for this gateway.</p>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">No credentials found for this gateway.</p>
+          <button
+            onClick={async () => {
+              const { error } = await supabase.from("api_credentials").insert({ gateway_id: selectedGw });
+              if (error) return toast.error(error.message);
+              toast.success("Credentials created — you can now configure API keys.");
+              refetch();
+            }}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Initialize Credentials
+          </button>
+        </div>
       )}
 
       {creds && (
