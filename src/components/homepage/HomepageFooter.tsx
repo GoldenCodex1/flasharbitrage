@@ -8,8 +8,14 @@ interface FooterLink {
   slug: string;
 }
 
+interface SocialLink {
+  label: string;
+  url: string;
+}
+
 export default function HomepageFooter() {
   const [pages, setPages] = useState<FooterLink[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
 
   useEffect(() => {
     supabase
@@ -18,9 +24,26 @@ export default function HomepageFooter() {
       .eq("is_visible", true)
       .order("display_order")
       .then(({ data }) => setPages(data || []));
+
+    supabase
+      .from("site_settings")
+      .select("key, value")
+      .like("key", "social_%")
+      .then(({ data }) => {
+        const labels: Record<string, string> = {
+          social_telegram: "Telegram",
+          social_twitter: "Twitter",
+          social_instagram: "Instagram",
+          social_discord: "Discord",
+          social_youtube: "YouTube",
+        };
+        const links = (data || [])
+          .filter((s) => s.value && s.value.trim() !== "")
+          .map((s) => ({ label: labels[s.key] || s.key, url: s.value }));
+        setSocialLinks(links);
+      });
   }, []);
 
-  // Split pages into company/legal groups
   const companyPages = pages.filter((p) => ["about", "contact", "team"].includes(p.slug));
   const legalPages = pages.filter((p) => ["privacy-policy", "terms-of-service"].includes(p.slug));
   const otherPages = pages.filter((p) => !["about", "contact", "team", "privacy-policy", "terms-of-service"].includes(p.slug));
@@ -63,9 +86,17 @@ export default function HomepageFooter() {
           <div>
             <h4 className="font-display font-semibold text-sm mb-4">Social</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Telegram</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Twitter</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Instagram</a></li>
+              {socialLinks.length > 0 ? (
+                socialLinks.map((s) => (
+                  <li key={s.label}>
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+                      {s.label}
+                    </a>
+                  </li>
+                ))
+              ) : (
+                <li className="text-muted-foreground/50 text-xs">No social links configured</li>
+              )}
             </ul>
           </div>
         </div>
