@@ -194,12 +194,13 @@ export default function ProviderConfig() {
 
           {/* Webhook URL */}
           <div>
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">Webhook URL (Read-Only)</label>
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">Webhook URL (auto-filled)</label>
             <input
-              value={webhookUrl}
+              value={form.webhook_url}
               readOnly
               className="w-full bg-muted border border-border/30 rounded-lg px-3 py-2 text-sm text-muted-foreground font-mono cursor-not-allowed"
             />
+            <p className="text-[10px] text-muted-foreground mt-1">Copy this URL into your NOWPayments IPN settings.</p>
           </div>
 
           {/* Webhook Secret */}
