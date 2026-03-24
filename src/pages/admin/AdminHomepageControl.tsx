@@ -198,6 +198,23 @@ export default function AdminHomepageControl() {
     security: "Security",
   };
 
+  const saveSocialLinks = async () => {
+    setSaving("social");
+    for (const [key, value] of Object.entries(socialLinks)) {
+      await supabase.from("site_settings").update({ value }).eq("key", key);
+    }
+    setSaving(null);
+    toast.success("Social links updated");
+  };
+
+  const socialLabels: Record<string, string> = {
+    social_telegram: "Telegram",
+    social_twitter: "Twitter / X",
+    social_instagram: "Instagram",
+    social_discord: "Discord",
+    social_youtube: "YouTube",
+  };
+
   const tabs = [
     { key: "branding", label: "Branding", icon: Image },
     { key: "hero", label: "Hero", icon: Type },
@@ -206,6 +223,7 @@ export default function AdminHomepageControl() {
     { key: "faq", label: "FAQ", icon: HelpCircle },
     { key: "pages", label: "Pages", icon: FileText },
     { key: "team", label: "Team", icon: Users },
+    { key: "social", label: "Social", icon: Share2 },
     { key: "seo", label: "SEO", icon: Search },
   ];
 
