@@ -54,10 +54,13 @@ export default function AdminHomepageControl() {
     if (teamRes.data) setTeamMembers(teamRes.data);
     if (sectionsRes.data) setSections(sectionsRes.data.map((s: any) => ({ ...s, items: (s.items as unknown as SectionItem[]) || [] })));
     if (settingsRes.data) {
+      const links: Record<string, string> = {};
       settingsRes.data.forEach((s: any) => {
         if (s.key === "logo_url") setLogoUrl(s.value);
         if (s.key === "favicon_url") setFaviconUrl(s.value);
+        if (s.key.startsWith("social_")) links[s.key] = s.value || "";
       });
+      setSocialLinks(links);
     }
   };
 
