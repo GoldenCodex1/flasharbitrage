@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, BarChart3, HelpCircle, Type, Search, Image, Globe, Users, Upload, FileText, LayoutGrid } from "lucide-react";
+import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, BarChart3, HelpCircle, Type, Search, Image, Globe, Users, Upload, FileText, LayoutGrid, Share2 } from "lucide-react";
 
 /* ─── types ─── */
 interface Stat { id: string; key: string; value: string; label: string; auto_calculate: boolean; }
@@ -29,6 +29,7 @@ export default function AdminHomepageControl() {
   const [logoUrl, setLogoUrl] = useState("");
   const [faviconUrl, setFaviconUrl] = useState("");
   const [sections, setSections] = useState<SectionData[]>([]);
+  const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("branding");
 
@@ -53,10 +54,13 @@ export default function AdminHomepageControl() {
     if (teamRes.data) setTeamMembers(teamRes.data);
     if (sectionsRes.data) setSections(sectionsRes.data.map((s: any) => ({ ...s, items: (s.items as unknown as SectionItem[]) || [] })));
     if (settingsRes.data) {
+      const links: Record<string, string> = {};
       settingsRes.data.forEach((s: any) => {
         if (s.key === "logo_url") setLogoUrl(s.value);
         if (s.key === "favicon_url") setFaviconUrl(s.value);
+        if (s.key.startsWith("social_")) links[s.key] = s.value || "";
       });
+      setSocialLinks(links);
     }
   };
 
@@ -194,6 +198,23 @@ export default function AdminHomepageControl() {
     security: "Security",
   };
 
+  const saveSocialLinks = async () => {
+    setSaving("social");
+    for (const [key, value] of Object.entries(socialLinks)) {
+      await supabase.from("site_settings").update({ value }).eq("key", key);
+    }
+    setSaving(null);
+    toast.success("Social links updated");
+  };
+
+  const socialLabels: Record<string, string> = {
+    social_telegram: "Telegram",
+    social_twitter: "Twitter / X",
+    social_instagram: "Instagram",
+    social_discord: "Discord",
+    social_youtube: "YouTube",
+  };
+
   const tabs = [
     { key: "branding", label: "Branding", icon: Image },
     { key: "hero", label: "Hero", icon: Type },
@@ -202,6 +223,7 @@ export default function AdminHomepageControl() {
     { key: "faq", label: "FAQ", icon: HelpCircle },
     { key: "pages", label: "Pages", icon: FileText },
     { key: "team", label: "Team", icon: Users },
+    { key: "social", label: "Social", icon: Share2 },
     { key: "seo", label: "SEO", icon: Search },
   ];
 
@@ -558,6 +580,33 @@ export default function AdminHomepageControl() {
             <div className="flex justify-end">
               <Button onClick={saveSeo} disabled={saving === "seo"}><Save className="w-4 h-4 mr-2" /> Save SEO</Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── SOCIAL LINKS ── */}
+      {activeTab === "social" && (
+        <div className="glass-card p-5 sm:p-6 space-y-4">
+          <h3 className="flex items-center gap-2 text-lg font-display font-semibold">
+            <Share2 className="w-5 h-5 text-primary" /> Social Media Links
+          </h3>
+          <p className="text-xs text-muted-foreground">Enter the full URL for each social platform. Leave blank to hide from footer.</p>
+          <div className="space-y-3">
+            {Object.entries(socialLabels).map(([key, label]) => (
+              <div key={key}>
+                <Label className="text-xs text-muted-foreground mb-1 block">{label}</Label>
+                <Input
+                  value={socialLinks[key] || ""}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, [key]: e.target.value })}
+                  placeholder={`https://${label.toLowerCase().replace(/ \/ /g, "").replace(/ /g, "")}.com/...`}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={saveSocialLinks} disabled={saving === "social"}>
+              <Save className="w-4 h-4 mr-2" /> Save Social Links
+            </Button>
           </div>
         </div>
       )}
