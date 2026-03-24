@@ -194,12 +194,15 @@ export default function Deposit() {
                 <label className="text-xs text-muted-foreground mb-1.5 block">Amount (USD)</label>
                 <input
                   type="number"
-                  placeholder="100.00"
-                  min="5"
+                  placeholder="12.00"
+                  min="12"
                   value={autoAmount}
                   onChange={(e) => setAutoAmount(e.target.value)}
-                  className="w-full bg-secondary border border-border/30 rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground"
+                  className={`w-full bg-secondary border rounded-lg px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground ${autoAmount && Number(autoAmount) < 12 ? 'border-destructive' : 'border-border/30'}`}
                 />
+                {autoAmount && Number(autoAmount) < 12 && (
+                  <p className="text-xs text-destructive mt-1">Minimum deposit amount is $12 USD</p>
+                )}
               </div>
 
               <div>
