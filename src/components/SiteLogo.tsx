@@ -1,5 +1,5 @@
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import fallbackLogo from "@/assets/site-logo.jpg";
+import fallbackLogo from "@/assets/site-logo.png";
 
 interface SiteLogoProps {
   size?: "sm" | "md" | "lg";
