@@ -44,6 +44,7 @@ import AdminSettlementLogs from "@/pages/admin/AdminSettlementLogs";
 import AdminPlans from "@/pages/admin/AdminPlans";
 import AdminEmailSettings from "@/pages/admin/AdminEmailSettings";
 import AdminTradeEngine from "@/pages/admin/AdminTradeEngine";
+import TawkToWidget from "@/components/TawkToWidget";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,6 +56,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <TawkToWidget />
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Homepage />} />

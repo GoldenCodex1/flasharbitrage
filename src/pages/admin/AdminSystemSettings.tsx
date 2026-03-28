@@ -1,7 +1,52 @@
 import { motion } from "framer-motion";
-import { Server, DollarSign, Gift, Bot, Shield, Cpu } from "lucide-react";
+import { Server, DollarSign, Gift, Bot, Shield, Cpu, MessageCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import InfraSection from "./system/InfraSection";
 import ConfigField from "./system/ConfigField";
+
+function TawkToSection() {
+  const [code, setCode] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    supabase.from("site_settings").select("value").eq("key", "tawkto_embed_code").maybeSingle().then(({ data }) => {
+      if (data?.value) setCode(data.value);
+    });
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await supabase.from("site_settings").upsert(
+      { key: "tawkto_embed_code", value: code, updated_at: new Date().toISOString() },
+      { onConflict: "key" }
+    );
+    setSaving(false);
+    if (error) toast.error(error.message);
+    else toast.success("Tawk.to code saved — reload site to activate");
+  };
+
+  return (
+    <div className="glass-card p-5 space-y-4">
+      <div className="flex items-center gap-2 mb-1">
+        <MessageCircle className="w-4 h-4 text-primary" />
+        <h2 className="font-semibold text-sm">Live Chat (Tawk.to)</h2>
+      </div>
+      <p className="text-xs text-muted-foreground">Paste your Tawk.to embed script below. Get it from <span className="text-primary">tawk.to → Administration → Chat Widget → Direct Chat Link</span> or the embed code section.</p>
+      <textarea
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+        rows={5}
+        className="w-full bg-secondary/50 border border-border/30 rounded-lg px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground/50"
+        placeholder={'<!--Start of Tawk.to Script-->\n<script type="text/javascript">\nvar Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();\n(function(){...})();\n</script>'}
+      />
+      <button onClick={save} disabled={saving} className="px-5 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+        {saving ? "Saving..." : "Save Chat Widget Code"}
+      </button>
+    </div>
+  );
+}
 
 export default function AdminSystemSettings() {
   return (
@@ -94,6 +139,9 @@ export default function AdminSystemSettings() {
           </>
         )}
       </InfraSection>
+
+      {/* 7 — Live Chat (Tawk.to) */}
+      <TawkToSection />
     </motion.div>
   );
 }

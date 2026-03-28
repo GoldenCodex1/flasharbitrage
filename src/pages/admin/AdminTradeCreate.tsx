@@ -7,15 +7,15 @@ import { toast } from "sonner";
 
 const FIELD_CLASS = "bg-secondary border border-border/30 rounded-lg px-3 py-2 text-sm text-foreground w-full";
 
-const EXCHANGES = ["Binance", "Coinbase", "Kraken", "KuCoin", "Bybit", "OKX"];
-const TRADING_PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT", "AVAX/USDT", "DOT/USDT", "MATIC/USDT"];
+const EXCHANGE_SUGGESTIONS = ["Binance", "Coinbase", "Kraken", "KuCoin", "Bybit", "OKX", "Gate.io", "HTX", "Bitfinex", "MEXC"];
+const PAIR_SUGGESTIONS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT", "AVAX/USDT", "DOT/USDT", "MATIC/USDT", "LINK/USDT", "UNI/USDT"];
 
 export default function AdminTradeCreate() {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: "",
-    trading_pair: "BTC/USDT",
+    trading_pair: "",
     strategy_type: "arbitrage",
     roi_percent: "",
     duration_hours: "",
@@ -27,8 +27,8 @@ export default function AdminTradeCreate() {
     auto_close: false,
     settlement_mode: "auto",
     description: "",
-    buy_exchange: "Binance",
-    sell_exchange: "Coinbase",
+    buy_exchange: "",
+    sell_exchange: "",
   });
 
   const set = (key: string, value: string | boolean) => setForm((p) => ({ ...p, [key]: value }));
@@ -39,7 +39,7 @@ export default function AdminTradeCreate() {
     : "";
 
   const handleCreate = async () => {
-    if (!form.trading_pair || !form.roi_percent || !form.duration_hours || !form.min_investment || !form.max_investment) {
+    if (!form.trading_pair || !form.roi_percent || !form.duration_hours || !form.min_investment || !form.max_investment || !form.buy_exchange || !form.sell_exchange) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -86,11 +86,10 @@ export default function AdminTradeCreate() {
           {/* Trading Pair */}
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Trading Pair *</label>
-            <select value={form.trading_pair} onChange={(e) => set("trading_pair", e.target.value)} className={FIELD_CLASS}>
-              {TRADING_PAIRS.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
+            <input list="pair-suggestions" value={form.trading_pair} onChange={(e) => set("trading_pair", e.target.value)} className={FIELD_CLASS} placeholder="e.g. BTC/USDT" />
+            <datalist id="pair-suggestions">
+              {PAIR_SUGGESTIONS.map((p) => <option key={p} value={p} />)}
+            </datalist>
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Strategy Type</label>
@@ -109,19 +108,17 @@ export default function AdminTradeCreate() {
           {/* Exchange Fields */}
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Buy Exchange *</label>
-            <select value={form.buy_exchange} onChange={(e) => set("buy_exchange", e.target.value)} className={FIELD_CLASS}>
-              {EXCHANGES.map((ex) => (
-                <option key={ex} value={ex}>{ex}</option>
-              ))}
-            </select>
+            <input list="exchange-suggestions" value={form.buy_exchange} onChange={(e) => set("buy_exchange", e.target.value)} className={FIELD_CLASS} placeholder="e.g. Binance" />
+            <datalist id="exchange-suggestions">
+              {EXCHANGE_SUGGESTIONS.map((ex) => <option key={ex} value={ex} />)}
+            </datalist>
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Sell Exchange *</label>
-            <select value={form.sell_exchange} onChange={(e) => set("sell_exchange", e.target.value)} className={FIELD_CLASS}>
-              {EXCHANGES.map((ex) => (
-                <option key={ex} value={ex}>{ex}</option>
-              ))}
-            </select>
+            <input list="sell-exchange-suggestions" value={form.sell_exchange} onChange={(e) => set("sell_exchange", e.target.value)} className={FIELD_CLASS} placeholder="e.g. Coinbase" />
+            <datalist id="sell-exchange-suggestions">
+              {EXCHANGE_SUGGESTIONS.map((ex) => <option key={ex} value={ex} />)}
+            </datalist>
           </div>
 
           <div>
