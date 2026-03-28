@@ -15,7 +15,7 @@ export default function AdminTradeCreate() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: "",
-    trading_pair: "BTC/USDT",
+    trading_pair: "",
     strategy_type: "arbitrage",
     roi_percent: "",
     duration_hours: "",
@@ -27,8 +27,8 @@ export default function AdminTradeCreate() {
     auto_close: false,
     settlement_mode: "auto",
     description: "",
-    buy_exchange: "Binance",
-    sell_exchange: "Coinbase",
+    buy_exchange: "",
+    sell_exchange: "",
   });
 
   const set = (key: string, value: string | boolean) => setForm((p) => ({ ...p, [key]: value }));
