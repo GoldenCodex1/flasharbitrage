@@ -86,11 +86,10 @@ export default function AdminTradeCreate() {
           {/* Trading Pair */}
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Trading Pair *</label>
-            <select value={form.trading_pair} onChange={(e) => set("trading_pair", e.target.value)} className={FIELD_CLASS}>
-              {TRADING_PAIRS.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
+            <input list="pair-suggestions" value={form.trading_pair} onChange={(e) => set("trading_pair", e.target.value)} className={FIELD_CLASS} placeholder="e.g. BTC/USDT" />
+            <datalist id="pair-suggestions">
+              {PAIR_SUGGESTIONS.map((p) => <option key={p} value={p} />)}
+            </datalist>
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Strategy Type</label>
@@ -109,19 +108,17 @@ export default function AdminTradeCreate() {
           {/* Exchange Fields */}
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Buy Exchange *</label>
-            <select value={form.buy_exchange} onChange={(e) => set("buy_exchange", e.target.value)} className={FIELD_CLASS}>
-              {EXCHANGES.map((ex) => (
-                <option key={ex} value={ex}>{ex}</option>
-              ))}
-            </select>
+            <input list="exchange-suggestions" value={form.buy_exchange} onChange={(e) => set("buy_exchange", e.target.value)} className={FIELD_CLASS} placeholder="e.g. Binance" />
+            <datalist id="exchange-suggestions">
+              {EXCHANGE_SUGGESTIONS.map((ex) => <option key={ex} value={ex} />)}
+            </datalist>
           </div>
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">Sell Exchange *</label>
-            <select value={form.sell_exchange} onChange={(e) => set("sell_exchange", e.target.value)} className={FIELD_CLASS}>
-              {EXCHANGES.map((ex) => (
-                <option key={ex} value={ex}>{ex}</option>
-              ))}
-            </select>
+            <input list="sell-exchange-suggestions" value={form.sell_exchange} onChange={(e) => set("sell_exchange", e.target.value)} className={FIELD_CLASS} placeholder="e.g. Coinbase" />
+            <datalist id="sell-exchange-suggestions">
+              {EXCHANGE_SUGGESTIONS.map((ex) => <option key={ex} value={ex} />)}
+            </datalist>
           </div>
 
           <div>
