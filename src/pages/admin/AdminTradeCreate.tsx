@@ -39,7 +39,7 @@ export default function AdminTradeCreate() {
     : "";
 
   const handleCreate = async () => {
-    if (!form.trading_pair || !form.roi_percent || !form.duration_hours || !form.min_investment || !form.max_investment) {
+    if (!form.trading_pair || !form.roi_percent || !form.duration_hours || !form.min_investment || !form.max_investment || !form.buy_exchange || !form.sell_exchange) {
       toast.error("Please fill all required fields");
       return;
     }
