@@ -7,8 +7,8 @@ import { toast } from "sonner";
 
 const FIELD_CLASS = "bg-secondary border border-border/30 rounded-lg px-3 py-2 text-sm text-foreground w-full";
 
-const EXCHANGES = ["Binance", "Coinbase", "Kraken", "KuCoin", "Bybit", "OKX"];
-const TRADING_PAIRS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT", "AVAX/USDT", "DOT/USDT", "MATIC/USDT"];
+const EXCHANGE_SUGGESTIONS = ["Binance", "Coinbase", "Kraken", "KuCoin", "Bybit", "OKX", "Gate.io", "HTX", "Bitfinex", "MEXC"];
+const PAIR_SUGGESTIONS = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT", "DOGE/USDT", "AVAX/USDT", "DOT/USDT", "MATIC/USDT", "LINK/USDT", "UNI/USDT"];
 
 export default function AdminTradeCreate() {
   const navigate = useNavigate();
