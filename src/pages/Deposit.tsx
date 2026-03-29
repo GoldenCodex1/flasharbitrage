@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Zap, Wallet, Copy, Check, ChevronDown, ChevronUp, ExternalLink, Loader2 } from "lucide-react";
+import { Zap, Wallet, Copy, Check, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import PaymentModal from "@/components/PaymentModal";
 
 export default function Deposit() {
   const { user } = useAuth();
@@ -21,6 +22,10 @@ export default function Deposit() {
   const [autoAmount, setAutoAmount] = useState("");
   const [autoCurrency, setAutoCurrency] = useState("usdttrc20");
   const [creatingPayment, setCreatingPayment] = useState(false);
+
+  // Payment modal state
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState<any>(null);
 
   const toggle = (method: string) => setExpandedMethod(expandedMethod === method ? null : method);
 
@@ -46,20 +51,15 @@ export default function Deposit() {
     enabled: !!user,
   });
 
-  // Check if NOWPayments is configured using secure DB function (no RLS issues)
   const { data: autoDepositEnabled } = useQuery({
     queryKey: ["nowpayments-configured"],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("is_auto_deposit_enabled");
-      if (error) {
-        console.error("Auto deposit check error:", error);
-        return false;
-      }
+      if (error) return false;
       return !!data;
     },
   });
 
-  // Fetch configurable minimum auto deposit from financial rules
   const { data: minAutoDeposit } = useQuery({
     queryKey: ["min-auto-deposit"],
     queryFn: async () => {
@@ -70,7 +70,6 @@ export default function Deposit() {
 
   const MIN_AUTO_DEPOSIT = minAutoDeposit ?? 12;
 
-  // Default currencies for auto deposit
   const allowedCurrencies = ["USDT", "BTC", "ETH"];
 
   const selectedWallet = wallets?.find((w) => w.id === selectedWalletId) ?? wallets?.[0];
@@ -141,13 +140,9 @@ export default function Deposit() {
         return;
       }
 
-      // Redirect to NOWPayments invoice (uses location.href to avoid iOS popup blocker)
-      if (data.invoice_url) {
-        toast.success("Redirecting to payment page...");
-        window.location.href = data.invoice_url;
-      } else {
-        toast.error("No payment URL received");
-      }
+      // Open in-app payment modal instead of redirecting
+      setPaymentData(data);
+      setPaymentModalOpen(true);
     } catch (err: any) {
       console.error("Auto deposit error:", err);
       toast.error(err.message || "Failed to create payment");
@@ -198,7 +193,7 @@ export default function Deposit() {
           {expandedMethod === "auto" && (
             <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} className="border-t border-border/30 p-5 space-y-4">
               <p className="text-xs text-muted-foreground">
-                Enter the amount in USD and select your preferred cryptocurrency. You'll be redirected to a secure payment page.
+                Enter the amount in USD and select your preferred cryptocurrency. Payment details will appear in-app.
               </p>
 
               <div>
@@ -242,15 +237,12 @@ export default function Deposit() {
                     Creating Payment...
                   </>
                 ) : (
-                  <>
-                    <ExternalLink className="w-4 h-4" />
-                    Pay Now
-                  </>
+                  "Pay Now"
                 )}
               </button>
 
               <p className="text-[10px] text-muted-foreground text-center">
-                You'll be redirected to NOWPayments. Your balance updates automatically once payment is confirmed.
+                Payment details will appear in-app. Your balance updates automatically once payment is confirmed.
               </p>
             </motion.div>
           )}
@@ -346,6 +338,17 @@ export default function Deposit() {
           </div>
         </div>
       )}
+
+      {/* Payment Modal */}
+      <PaymentModal
+        open={paymentModalOpen}
+        onClose={() => {
+          setPaymentModalOpen(false);
+          setPaymentData(null);
+          queryClient.invalidateQueries({ queryKey: ["my-deposits"] });
+        }}
+        paymentData={paymentData}
+      />
     </motion.div>
   );
 }

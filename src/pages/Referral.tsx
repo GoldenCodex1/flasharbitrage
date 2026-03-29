@@ -28,9 +28,21 @@ export default function Referral() {
     enabled: !!user,
   });
 
+  // Fetch commissions with level breakdown
+  const { data: commissions } = useQuery({
+    queryKey: ["my-commissions", user?.id],
+    queryFn: async () => {
+      const { data } = await supabase.from("referral_commissions").select("*").eq("referrer_id", user!.id).order("created_at", { ascending: false });
+      return data ?? [];
+    },
+    enabled: !!user,
+  });
+
   const code = profile?.referral_code ?? "...";
-  const totalEarnings = referrals?.reduce((sum, r) => sum + Number(r.total_commission), 0) ?? 0;
-  const commissionRate = referrals?.[0]?.commission_percent ?? 1;
+  const totalEarnings = commissions?.reduce((sum, c) => sum + Number(c.commission_amount), 0) ?? 0;
+  const l1Earnings = commissions?.filter((c: any) => (c.level || 1) === 1).reduce((s, c) => s + Number(c.commission_amount), 0) ?? 0;
+  const l2Earnings = commissions?.filter((c: any) => (c.level || 0) === 2).reduce((s, c) => s + Number(c.commission_amount), 0) ?? 0;
+  const l3Earnings = commissions?.filter((c: any) => (c.level || 0) === 3).reduce((s, c) => s + Number(c.commission_amount), 0) ?? 0;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(`${window.location.origin}/auth?ref=${code}`);
@@ -38,11 +50,13 @@ export default function Referral() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const fmt = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2 });
+
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
       <h1 className="font-display font-bold text-2xl">Referral Program</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="metric-card">
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">Total Referrals</span>
@@ -55,16 +69,21 @@ export default function Referral() {
             <span className="text-xs text-muted-foreground">Total Earnings</span>
             <Gift className="w-4 h-4 text-muted-foreground" />
           </div>
-          <span className="text-2xl font-display font-bold text-success">
-            ${totalEarnings.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-          </span>
+          <span className="text-2xl font-display font-bold text-success">{fmt(totalEarnings)}</span>
         </div>
         <div className="metric-card">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Commission Rate</span>
+            <span className="text-xs text-muted-foreground">L1 Earnings</span>
             <TrendingUp className="w-4 h-4 text-muted-foreground" />
           </div>
-          <span className="text-2xl font-display font-bold">{commissionRate}%</span>
+          <span className="text-xl font-display font-bold text-primary">{fmt(l1Earnings)}</span>
+        </div>
+        <div className="metric-card">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">L2 + L3</span>
+            <TrendingUp className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <span className="text-xl font-display font-bold">{fmt(l2Earnings + l3Earnings)}</span>
         </div>
       </div>
 
@@ -81,10 +100,44 @@ export default function Referral() {
         </div>
       </div>
 
+      {/* Commission History */}
+      {commissions && commissions.length > 0 && (
+        <div className="glass-card overflow-hidden">
+          <div className="px-4 py-3 border-b border-border/30">
+            <h3 className="font-display font-semibold text-sm">Commission History</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border/30">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Level</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Amount</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {commissions.map((c: any) => (
+                  <tr key={c.id} className="border-b border-border/10 hover:bg-secondary/30 transition-colors">
+                    <td className="px-4 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${(c.level || 1) === 1 ? 'bg-primary/20 text-primary' : (c.level || 0) === 2 ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                        Level {c.level || 1}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-success font-semibold">{fmt(Number(c.commission_amount))}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Direct Referrals */}
       {referrals && referrals.length > 0 && (
         <div className="glass-card overflow-hidden">
           <div className="px-4 py-3 border-b border-border/30">
-            <h3 className="font-display font-semibold text-sm">Referral History</h3>
+            <h3 className="font-display font-semibold text-sm">Direct Referrals</h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -92,7 +145,7 @@ export default function Referral() {
                 <tr className="border-b border-border/30">
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Referred User</th>
                   <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Joined</th>
-                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Commission</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Earned</th>
                 </tr>
               </thead>
               <tbody>
@@ -100,7 +153,7 @@ export default function Referral() {
                   <tr key={r.id} className="border-b border-border/10 hover:bg-secondary/30 transition-colors">
                     <td className="px-4 py-3 font-medium font-mono text-xs">{r.referred_id.slice(0, 8)}...</td>
                     <td className="px-4 py-3 text-muted-foreground">{formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}</td>
-                    <td className="px-4 py-3 text-success font-semibold">${Number(r.total_commission).toFixed(2)}</td>
+                    <td className="px-4 py-3 text-success font-semibold">{fmt(Number(r.total_commission))}</td>
                   </tr>
                 ))}
               </tbody>
