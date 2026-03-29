@@ -12,7 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Authenticate user
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
@@ -26,7 +25,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify JWT
     const token = authHeader.replace("Bearer ", "");
     const anonClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -49,7 +47,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get NOWPayments API key from api_credentials table
+    // Get NOWPayments API key
     const { data: gw } = await supabase
       .from("api_gateways")
       .select("id, provider_name")
@@ -83,13 +81,10 @@ Deno.serve(async (req) => {
       ? "https://api-sandbox.nowpayments.io/v1"
       : "https://api.nowpayments.io/v1";
 
-    const payCurrency = (currency || "USDTTRC20").toLowerCase();
+    const payCurrency = (currency || "usdttrc20").toLowerCase();
 
-    // Create NOWPayments invoice
-    const projectId = Deno.env.get("SUPABASE_URL")!.match(/\/\/([^.]+)/)?.[1] || "";
-    const callbackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/nowpayments-webhook`;
-
-    const invoiceRes = await fetch(`${baseUrl}/invoice`, {
+    // Use /payment endpoint instead of /invoice for embedded flow
+    const paymentRes = await fetch(`${baseUrl}/payment`, {
       method: "POST",
       headers: {
         "x-api-key": apiKey,
@@ -101,20 +96,18 @@ Deno.serve(async (req) => {
         pay_currency: payCurrency,
         order_id: user.id,
         order_description: `Deposit by ${user.email}`,
-        ipn_callback_url: callbackUrl,
-        success_url: `${req.headers.get("origin") || "https://flasharbitrage.com"}/deposit?status=success`,
-        cancel_url: `${req.headers.get("origin") || "https://flasharbitrage.com"}/deposit?status=cancelled`,
+        ipn_callback_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/nowpayments-webhook`,
       }),
     });
 
-    const invoiceData = await invoiceRes.json();
+    const paymentData = await paymentRes.json();
 
-    if (!invoiceRes.ok) {
-      console.error("NOWPayments error:", JSON.stringify(invoiceData));
+    if (!paymentRes.ok) {
+      console.error("NOWPayments error:", JSON.stringify(paymentData));
       return new Response(
-        JSON.stringify({ error: invoiceData.message || "Failed to create payment" }),
+        JSON.stringify({ error: paymentData.message || "Failed to create payment" }),
         {
-          status: invoiceRes.status,
+          status: paymentRes.status,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
@@ -123,9 +116,14 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        invoice_url: invoiceData.invoice_url,
-        invoice_id: invoiceData.id,
-        payment_status: invoiceData.payment_status || "waiting",
+        payment_id: paymentData.payment_id,
+        pay_address: paymentData.pay_address,
+        pay_amount: paymentData.pay_amount,
+        pay_currency: paymentData.pay_currency,
+        network: paymentData.network || payCurrency,
+        payment_status: paymentData.payment_status || "waiting",
+        expiration_estimate_date: paymentData.expiration_estimate_date || null,
+        price_amount: paymentData.price_amount,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
