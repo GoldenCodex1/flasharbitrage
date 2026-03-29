@@ -484,6 +484,36 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_referral_config: {
+        Row: {
+          created_at: string
+          id: string
+          level1_percent: number
+          level2_percent: number
+          level3_percent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level1_percent?: number
+          level2_percent?: number
+          level3_percent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level1_percent?: number
+          level2_percent?: number
+          level3_percent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       deposit_settings: {
         Row: {
           address_rotation_enabled: boolean
@@ -1062,24 +1092,30 @@ export type Database = {
           created_at: string
           deposit_id: string
           id: string
+          level: number
           referred_user_id: string
           referrer_id: string
+          source_user_id: string | null
         }
         Insert: {
           commission_amount?: number
           created_at?: string
           deposit_id: string
           id?: string
+          level?: number
           referred_user_id: string
           referrer_id: string
+          source_user_id?: string | null
         }
         Update: {
           commission_amount?: number
           created_at?: string
           deposit_id?: string
           id?: string
+          level?: number
           referred_user_id?: string
           referrer_id?: string
+          source_user_id?: string | null
         }
         Relationships: []
       }
@@ -1087,7 +1123,10 @@ export type Database = {
         Row: {
           default_commission_percent: number
           id: string
+          level1_commission_percent: number
           level2_commission_percent: number
+          level3_commission_percent: number
+          max_commission_per_deposit: number
           multi_level_enabled: boolean
           referral_bonus_cap: number
           updated_at: string
@@ -1095,7 +1134,10 @@ export type Database = {
         Insert: {
           default_commission_percent?: number
           id?: string
+          level1_commission_percent?: number
           level2_commission_percent?: number
+          level3_commission_percent?: number
+          max_commission_per_deposit?: number
           multi_level_enabled?: boolean
           referral_bonus_cap?: number
           updated_at?: string
@@ -1103,7 +1145,10 @@ export type Database = {
         Update: {
           default_commission_percent?: number
           id?: string
+          level1_commission_percent?: number
           level2_commission_percent?: number
+          level3_commission_percent?: number
+          max_commission_per_deposit?: number
           multi_level_enabled?: boolean
           referral_bonus_cap?: number
           updated_at?: string
