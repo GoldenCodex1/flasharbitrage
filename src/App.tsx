@@ -46,6 +46,8 @@ import AdminEmailSettings from "@/pages/admin/AdminEmailSettings";
 import AdminTradeEngine from "@/pages/admin/AdminTradeEngine";
 import TawkToWidget from "@/components/TawkToWidget";
 import NotFound from "@/pages/NotFound";
+import Apply from "@/pages/Apply";
+import AdminApplications from "@/pages/admin/AdminApplications";
 
 const queryClient = new QueryClient();
 
