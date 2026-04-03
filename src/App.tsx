@@ -105,6 +105,7 @@ const App = () => (
               <Route path="plans" element={<AdminPlans />} />
               <Route path="trades/settlement-logs" element={<AdminSettlementLogs />} />
               <Route path="trade-engine" element={<AdminTradeEngine />} />
+              <Route path="applications" element={<AdminApplications />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
