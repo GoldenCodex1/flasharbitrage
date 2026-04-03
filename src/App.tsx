@@ -46,6 +46,8 @@ import AdminEmailSettings from "@/pages/admin/AdminEmailSettings";
 import AdminTradeEngine from "@/pages/admin/AdminTradeEngine";
 import TawkToWidget from "@/components/TawkToWidget";
 import NotFound from "@/pages/NotFound";
+import Apply from "@/pages/Apply";
+import AdminApplications from "@/pages/admin/AdminApplications";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +66,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/page/:slug" element={<FooterPage />} />
             <Route path="/team" element={<TeamPage />} />
+            <Route path="/apply" element={<Apply />} />
 
             {/* Protected User Routes */}
             <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
@@ -102,6 +105,7 @@ const App = () => (
               <Route path="plans" element={<AdminPlans />} />
               <Route path="trades/settlement-logs" element={<AdminSettlementLogs />} />
               <Route path="trade-engine" element={<AdminTradeEngine />} />
+              <Route path="applications" element={<AdminApplications />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
