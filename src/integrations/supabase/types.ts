@@ -232,6 +232,57 @@ export type Database = {
         }
         Relationships: []
       }
+      applications: {
+        Row: {
+          admin_note: string | null
+          city: string
+          country: string
+          created_at: string
+          email: string
+          experience: string
+          full_name: string
+          id: string
+          motivation: string
+          network_size: string
+          phone: string
+          selected_role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          city: string
+          country: string
+          created_at?: string
+          email: string
+          experience?: string
+          full_name: string
+          id?: string
+          motivation?: string
+          network_size?: string
+          phone: string
+          selected_role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          city?: string
+          country?: string
+          created_at?: string
+          email?: string
+          experience?: string
+          full_name?: string
+          id?: string
+          motivation?: string
+          network_size?: string
+          phone?: string
+          selected_role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bot_activity: {
         Row: {
           bot_enabled: boolean
@@ -481,6 +532,30 @@ export type Database = {
           spread_tolerance_percent?: number
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      country_slots: {
+        Row: {
+          approved_count: number
+          country: string
+          id: string
+          max_leaders: number
+          updated_at: string
+        }
+        Insert: {
+          approved_count?: number
+          country: string
+          id?: string
+          max_leaders?: number
+          updated_at?: string
+        }
+        Update: {
+          approved_count?: number
+          country?: string
+          id?: string
+          max_leaders?: number
+          updated_at?: string
         }
         Relationships: []
       }
