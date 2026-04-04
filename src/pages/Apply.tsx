@@ -9,9 +9,10 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Globe, Users, DollarSign, Crown, Shield, Target, ChevronRight, ChevronLeft, Check, Copy, Star, TrendingUp, Award, Clock, MapPin, Briefcase } from "lucide-react";
+import { Globe, Users, DollarSign, Crown, Shield, Target, ChevronRight, ChevronLeft, Check, Star, TrendingUp, Award, Clock, MapPin, Briefcase } from "lucide-react";
 import SiteLogo from "@/components/SiteLogo";
 import { Link } from "react-router-dom";
+import { useApplyContent } from "@/hooks/useApplyContent";
 
 /* ─── Animated counter ─── */
 function AnimatedCounter({ target, duration = 2000, prefix = "", suffix = "" }: { target: number; duration?: number; prefix?: string; suffix?: string }) {
@@ -74,6 +75,7 @@ const ROLES = [
 const STEPS = ["Personal Info", "Location", "Experience", "Motivation", "Confirm"];
 
 export default function Apply() {
+  const content = useApplyContent();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [expandedRole, setExpandedRole] = useState<string | null>(null);
   const [step, setStep] = useState(0);
@@ -90,7 +92,7 @@ export default function Apply() {
   // simulator
   const [simReferrals, setSimReferrals] = useState(10);
   const [simTeam, setSimTeam] = useState(50);
-  const estimatedEarning = simReferrals * 50 + simTeam * 12;
+  const estimatedEarning = simReferrals * content.sim_referral_multiplier + simTeam * content.sim_team_multiplier;
 
   const set = (key: string, val: string) => setForm(prev => ({ ...prev, [key]: val }));
 
@@ -147,20 +149,27 @@ export default function Apply() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
         <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
           <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.6 }}>
-            <Badge className="mb-4 bg-accent/20 text-accent border-accent/30 text-sm px-4 py-1">Now Recruiting</Badge>
+            <Badge className="mb-4 bg-accent/20 text-accent border-accent/30 text-sm px-4 py-1">{content.badge_text}</Badge>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Become a <span className="text-primary">Regional Leader</span> —<br />Build & Earn Across Your Country
+              {content.hero_title.includes("Regional Leader") ? (
+                <>
+                  Become a <span className="text-primary">Regional Leader</span> —<br />
+                  {content.hero_title.split("—")[1]?.trim() || "Build & Earn Across Your Country"}
+                </>
+              ) : (
+                content.hero_title
+              )}
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              Join our global expansion and earn from your network, team, and leadership position.
+              {content.hero_subtitle}
             </p>
           </motion.div>
 
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="grid grid-cols-3 gap-4 max-w-lg mx-auto">
             {[
-              { label: "Leaders", value: 320, icon: Users },
-              { label: "Countries", value: 48, icon: Globe },
-              { label: "Paid Out", value: 1200000, prefix: "$", icon: DollarSign },
+              { label: "Leaders", value: content.counter_leaders, icon: Users },
+              { label: "Countries", value: content.counter_countries, icon: Globe },
+              { label: "Paid Out", value: content.counter_paid, prefix: "$", icon: DollarSign },
             ].map((s) => (
               <div key={s.label} className="bg-card/50 border border-border rounded-xl p-4">
                 <s.icon className="w-5 h-5 text-primary mx-auto mb-1" />
@@ -228,9 +237,9 @@ export default function Apply() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { level: "Level 1", pct: "5%", desc: "Direct referrals", icon: Users, color: "text-primary" },
-              { level: "Level 2", pct: "2%", desc: "Indirect referrals", icon: TrendingUp, color: "text-accent" },
-              { level: "Level 3", pct: "1%", desc: "Third-level network", icon: Globe, color: "text-amber-400" },
+              { level: "Level 1", pct: content.earning_l1, desc: "Direct referrals", icon: Users, color: "text-primary" },
+              { level: "Level 2", pct: content.earning_l2, desc: "Indirect referrals", icon: TrendingUp, color: "text-accent" },
+              { level: "Level 3", pct: content.earning_l3, desc: "Third-level network", icon: Globe, color: "text-amber-400" },
               { level: "Bonus", pct: "Varies", desc: "Leadership bonuses", icon: Award, color: "text-purple-400" },
             ].map((e) => (
               <Card key={e.level} className="text-center border-border bg-card/60">
@@ -270,31 +279,33 @@ export default function Apply() {
       </section>
 
       {/* ── LEADERBOARD ── */}
-      <section className="py-16 bg-card/30">
-        <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-8">Top Leaders</h2>
-          <div className="space-y-3">
-            {[
-              { rank: 1, name: "J****n M.", country: "Nigeria", earned: "$18,400" },
-              { rank: 2, name: "A****a K.", country: "South Africa", earned: "$12,750" },
-              { rank: 3, name: "R****l S.", country: "India", earned: "$9,320" },
-            ].map((l) => (
-              <Card key={l.rank} className="border-border bg-card/60">
-                <CardContent className="flex items-center gap-4 py-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${l.rank === 1 ? "bg-amber-500/20 text-amber-400" : l.rank === 2 ? "bg-gray-400/20 text-gray-300" : "bg-orange-500/20 text-orange-400"}`}>
-                    #{l.rank}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">{l.name}</div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" />{l.country}</div>
-                  </div>
-                  <div className="text-accent font-bold">{l.earned}</div>
-                </CardContent>
-              </Card>
-            ))}
+      {content.leaderboard_visible && (
+        <section className="py-16 bg-card/30">
+          <div className="max-w-3xl mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-8">Top Leaders</h2>
+            <div className="space-y-3">
+              {[
+                { rank: 1, name: "J****n M.", country: "Nigeria", earned: "$18,400" },
+                { rank: 2, name: "A****a K.", country: "South Africa", earned: "$12,750" },
+                { rank: 3, name: "R****l S.", country: "India", earned: "$9,320" },
+              ].map((l) => (
+                <Card key={l.rank} className="border-border bg-card/60">
+                  <CardContent className="flex items-center gap-4 py-4">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${l.rank === 1 ? "bg-amber-500/20 text-amber-400" : l.rank === 2 ? "bg-gray-400/20 text-gray-300" : "bg-orange-500/20 text-orange-400"}`}>
+                      #{l.rank}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">{l.name}</div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="w-3 h-3" />{l.country}</div>
+                    </div>
+                    <div className="text-accent font-bold">{l.earned}</div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── REQUIREMENTS ── */}
       <section className="py-16 max-w-3xl mx-auto px-4">
@@ -321,7 +332,7 @@ export default function Apply() {
         <div className="max-w-xl mx-auto px-4 text-center">
           <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} transition={{ repeat: Infinity, repeatType: "reverse", duration: 2 }}>
             <Badge className="bg-destructive/20 text-destructive border-destructive/30 text-sm px-6 py-2">
-              <Clock className="w-4 h-4 mr-2 inline" /> Limited Slots Per Country — Apply Now
+              <Clock className="w-4 h-4 mr-2 inline" /> {content.scarcity_text}
             </Badge>
           </motion.div>
         </div>
