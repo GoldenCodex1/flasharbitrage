@@ -58,12 +58,19 @@ export default function AdminHomepageControl() {
     if (sectionsRes.data) setSections(sectionsRes.data.map((s: any) => ({ ...s, items: (s.items as unknown as SectionItem[]) || [] })));
     if (settingsRes.data) {
       const links: Record<string, string> = {};
+      const live: Record<string, string> = {};
+      const apply: Record<string, string> = {};
       settingsRes.data.forEach((s: any) => {
         if (s.key === "logo_url") setLogoUrl(s.value);
         if (s.key === "favicon_url") setFaviconUrl(s.value);
         if (s.key.startsWith("social_")) links[s.key] = s.value || "";
+        if (["floating_particles_enabled", "activity_feed_enabled", "profit_bubbles_enabled", "animation_intensity"].includes(s.key))
+          live[s.key] = s.value || "";
+        if (s.key.startsWith("apply_")) apply[s.key] = s.value || "";
       });
       setSocialLinks(links);
+      setLiveToggles(live);
+      setApplySettings(apply);
     }
   };
 
