@@ -225,6 +225,40 @@ export default function AdminHomepageControl() {
     social_youtube: "YouTube",
   };
 
+  const saveLiveToggles = async () => {
+    setSaving("live");
+    for (const [key, value] of Object.entries(liveToggles)) {
+      await supabase.from("site_settings").update({ value }).eq("key", key);
+    }
+    setSaving(null);
+    toast.success("Live element settings updated");
+  };
+
+  const saveApplySettings = async () => {
+    setSaving("apply");
+    for (const [key, value] of Object.entries(applySettings)) {
+      await supabase.from("site_settings").update({ value }).eq("key", key);
+    }
+    setSaving(null);
+    toast.success("Apply page settings updated");
+  };
+
+  const applyFieldLabels: Record<string, string> = {
+    apply_hero_title: "Hero Title",
+    apply_hero_subtitle: "Hero Subtitle",
+    apply_badge_text: "Badge Text",
+    apply_scarcity_text: "Scarcity Message",
+    apply_counter_leaders: "Counter: Total Leaders",
+    apply_counter_countries: "Counter: Countries",
+    apply_counter_paid: "Counter: Total Paid Out ($)",
+    apply_earning_l1: "Earning Level 1 (%)",
+    apply_earning_l2: "Earning Level 2 (%)",
+    apply_earning_l3: "Earning Level 3 (%)",
+    apply_sim_referral_multiplier: "Simulator: Referral Multiplier ($)",
+    apply_sim_team_multiplier: "Simulator: Team Multiplier ($)",
+    apply_leaderboard_visible: "Show Leaderboard",
+  };
+
   const tabs = [
     { key: "branding", label: "Branding", icon: Image },
     { key: "hero", label: "Hero", icon: Type },
@@ -235,6 +269,8 @@ export default function AdminHomepageControl() {
     { key: "team", label: "Team", icon: Users },
     { key: "social", label: "Social", icon: Share2 },
     { key: "seo", label: "SEO", icon: Search },
+    { key: "live", label: "Live Elements", icon: Sparkles },
+    { key: "apply", label: "Apply Page", icon: Briefcase },
   ];
 
   const sectionAnim = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } };
