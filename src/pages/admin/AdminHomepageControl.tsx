@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, BarChart3, HelpCircle, Type, Search, Image, Globe, Users, Upload, FileText, LayoutGrid, Share2 } from "lucide-react";
+import { Save, Plus, Trash2, GripVertical, Eye, EyeOff, BarChart3, HelpCircle, Type, Search, Image, Globe, Users, Upload, FileText, LayoutGrid, Share2, Sparkles, Briefcase } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /* ─── types ─── */
 interface Stat { id: string; key: string; value: string; label: string; auto_calculate: boolean; }
@@ -30,6 +31,8 @@ export default function AdminHomepageControl() {
   const [faviconUrl, setFaviconUrl] = useState("");
   const [sections, setSections] = useState<SectionData[]>([]);
   const [socialLinks, setSocialLinks] = useState<Record<string, string>>({});
+  const [liveToggles, setLiveToggles] = useState<Record<string, string>>({});
+  const [applySettings, setApplySettings] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("branding");
 
@@ -55,12 +58,19 @@ export default function AdminHomepageControl() {
     if (sectionsRes.data) setSections(sectionsRes.data.map((s: any) => ({ ...s, items: (s.items as unknown as SectionItem[]) || [] })));
     if (settingsRes.data) {
       const links: Record<string, string> = {};
+      const live: Record<string, string> = {};
+      const apply: Record<string, string> = {};
       settingsRes.data.forEach((s: any) => {
         if (s.key === "logo_url") setLogoUrl(s.value);
         if (s.key === "favicon_url") setFaviconUrl(s.value);
         if (s.key.startsWith("social_")) links[s.key] = s.value || "";
+        if (["floating_particles_enabled", "activity_feed_enabled", "profit_bubbles_enabled", "animation_intensity"].includes(s.key))
+          live[s.key] = s.value || "";
+        if (s.key.startsWith("apply_")) apply[s.key] = s.value || "";
       });
       setSocialLinks(links);
+      setLiveToggles(live);
+      setApplySettings(apply);
     }
   };
 
@@ -215,6 +225,40 @@ export default function AdminHomepageControl() {
     social_youtube: "YouTube",
   };
 
+  const saveLiveToggles = async () => {
+    setSaving("live");
+    for (const [key, value] of Object.entries(liveToggles)) {
+      await supabase.from("site_settings").update({ value }).eq("key", key);
+    }
+    setSaving(null);
+    toast.success("Live element settings updated");
+  };
+
+  const saveApplySettings = async () => {
+    setSaving("apply");
+    for (const [key, value] of Object.entries(applySettings)) {
+      await supabase.from("site_settings").update({ value }).eq("key", key);
+    }
+    setSaving(null);
+    toast.success("Apply page settings updated");
+  };
+
+  const applyFieldLabels: Record<string, string> = {
+    apply_hero_title: "Hero Title",
+    apply_hero_subtitle: "Hero Subtitle",
+    apply_badge_text: "Badge Text",
+    apply_scarcity_text: "Scarcity Message",
+    apply_counter_leaders: "Counter: Total Leaders",
+    apply_counter_countries: "Counter: Countries",
+    apply_counter_paid: "Counter: Total Paid Out ($)",
+    apply_earning_l1: "Earning Level 1 (%)",
+    apply_earning_l2: "Earning Level 2 (%)",
+    apply_earning_l3: "Earning Level 3 (%)",
+    apply_sim_referral_multiplier: "Simulator: Referral Multiplier ($)",
+    apply_sim_team_multiplier: "Simulator: Team Multiplier ($)",
+    apply_leaderboard_visible: "Show Leaderboard",
+  };
+
   const tabs = [
     { key: "branding", label: "Branding", icon: Image },
     { key: "hero", label: "Hero", icon: Type },
@@ -225,6 +269,8 @@ export default function AdminHomepageControl() {
     { key: "team", label: "Team", icon: Users },
     { key: "social", label: "Social", icon: Share2 },
     { key: "seo", label: "SEO", icon: Search },
+    { key: "live", label: "Live Elements", icon: Sparkles },
+    { key: "apply", label: "Apply Page", icon: Briefcase },
   ];
 
   const sectionAnim = { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 } };
@@ -606,6 +652,124 @@ export default function AdminHomepageControl() {
           <div className="flex justify-end">
             <Button onClick={saveSocialLinks} disabled={saving === "social"}>
               <Save className="w-4 h-4 mr-2" /> Save Social Links
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── LIVE ELEMENTS ── */}
+      {activeTab === "live" && (
+        <div className="glass-card p-5 sm:p-6 space-y-4">
+          <h3 className="flex items-center gap-2 text-lg font-display font-semibold">
+            <Sparkles className="w-5 h-5 text-primary" /> Live Element Controls
+          </h3>
+          <p className="text-xs text-muted-foreground">Toggle homepage animations and visual effects on/off.</p>
+          <div className="space-y-4">
+            {[
+              { key: "floating_particles_enabled", label: "Floating Particles" },
+              { key: "activity_feed_enabled", label: "Live Activity Feed" },
+              { key: "profit_bubbles_enabled", label: "Profit Bubbles" },
+            ].map((toggle) => (
+              <div key={toggle.key} className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-4">
+                <Label className="text-sm font-medium">{toggle.label}</Label>
+                <Switch
+                  checked={liveToggles[toggle.key] !== "false"}
+                  onCheckedChange={(v) => setLiveToggles({ ...liveToggles, [toggle.key]: v ? "true" : "false" })}
+                />
+              </div>
+            ))}
+            <div className="rounded-lg border border-border/40 bg-card/50 p-4">
+              <Label className="text-xs text-muted-foreground mb-2 block">Animation Intensity</Label>
+              <Select
+                value={liveToggles.animation_intensity || "medium"}
+                onValueChange={(v) => setLiveToggles({ ...liveToggles, animation_intensity: v })}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <Button onClick={saveLiveToggles} disabled={saving === "live"}>
+              <Save className="w-4 h-4 mr-2" /> Save Settings
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── APPLY PAGE ── */}
+      {activeTab === "apply" && (
+        <div className="glass-card p-5 sm:p-6 space-y-6">
+          <h3 className="flex items-center gap-2 text-lg font-display font-semibold">
+            <Briefcase className="w-5 h-5 text-primary" /> Apply Page Content
+          </h3>
+          <p className="text-xs text-muted-foreground">Edit the recruitment page (/apply) content. Changes reflect instantly.</p>
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Hero Section</h4>
+            {["apply_hero_title", "apply_hero_subtitle", "apply_badge_text", "apply_scarcity_text"].map((key) => (
+              <div key={key}>
+                <Label className="text-xs text-muted-foreground mb-1 block">{applyFieldLabels[key] || key}</Label>
+                {key === "apply_hero_subtitle" ? (
+                  <Textarea value={applySettings[key] || ""} onChange={(e) => setApplySettings({ ...applySettings, [key]: e.target.value })} rows={2} />
+                ) : (
+                  <Input value={applySettings[key] || ""} onChange={(e) => setApplySettings({ ...applySettings, [key]: e.target.value })} />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Hero Counters</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {["apply_counter_leaders", "apply_counter_countries", "apply_counter_paid"].map((key) => (
+                <div key={key}>
+                  <Label className="text-xs text-muted-foreground mb-1 block">{applyFieldLabels[key]}</Label>
+                  <Input type="number" value={applySettings[key] || ""} onChange={(e) => setApplySettings({ ...applySettings, [key]: e.target.value })} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Earning Structure</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {["apply_earning_l1", "apply_earning_l2", "apply_earning_l3"].map((key) => (
+                <div key={key}>
+                  <Label className="text-xs text-muted-foreground mb-1 block">{applyFieldLabels[key]}</Label>
+                  <Input value={applySettings[key] || ""} onChange={(e) => setApplySettings({ ...applySettings, [key]: e.target.value })} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Earning Simulator</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {["apply_sim_referral_multiplier", "apply_sim_team_multiplier"].map((key) => (
+                <div key={key}>
+                  <Label className="text-xs text-muted-foreground mb-1 block">{applyFieldLabels[key]}</Label>
+                  <Input type="number" value={applySettings[key] || ""} onChange={(e) => setApplySettings({ ...applySettings, [key]: e.target.value })} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-border/40 bg-card/50 p-4">
+            <Label className="text-sm font-medium">Show Leaderboard</Label>
+            <Switch
+              checked={applySettings.apply_leaderboard_visible !== "false"}
+              onCheckedChange={(v) => setApplySettings({ ...applySettings, apply_leaderboard_visible: v ? "true" : "false" })}
+            />
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={saveApplySettings} disabled={saving === "apply"}>
+              <Save className="w-4 h-4 mr-2" /> Save Apply Page
             </Button>
           </div>
         </div>

@@ -14,15 +14,18 @@ import LiveActivityFeed from "@/components/homepage/LiveActivityFeed";
 import ProfitBubbles from "@/components/homepage/ProfitBubbles";
 import InteractiveTradePreview from "@/components/homepage/InteractiveTradePreview";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useLiveElementSettings } from "@/hooks/useLiveElementSettings";
 
 export default function Homepage() {
   useSiteSettings();
+  const liveSettings = useLiveElementSettings();
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden relative">
       <SeoHead />
-      <FloatingParticles />
-      <ProfitBubbles />
-      <LiveActivityFeed />
+      {liveSettings.floating_particles && <FloatingParticles />}
+      {liveSettings.profit_bubbles && <ProfitBubbles />}
+      {liveSettings.activity_feed && <LiveActivityFeed />}
       <HomepageNav />
       <HeroSection />
       <HowItWorks />
