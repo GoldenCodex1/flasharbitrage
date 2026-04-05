@@ -14,8 +14,16 @@ import SiteLogo from "@/components/SiteLogo";
 import { Link } from "react-router-dom";
 import { useApplyContent } from "@/hooks/useApplyContent";
 
+/* ─── Format large numbers ─── */
+function formatCompact(n: number): string {
+  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, "") + "B";
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "K";
+  return n.toLocaleString();
+}
+
 /* ─── Animated counter ─── */
-function AnimatedCounter({ target, duration = 2000, prefix = "", suffix = "" }: { target: number; duration?: number; prefix?: string; suffix?: string }) {
+function AnimatedCounter({ target, duration = 2000, prefix = "", suffix = "", compact = false }: { target: number; duration?: number; prefix?: string; suffix?: string; compact?: boolean }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
@@ -38,7 +46,8 @@ function AnimatedCounter({ target, duration = 2000, prefix = "", suffix = "" }: 
     return () => observer.disconnect();
   }, [target, duration]);
 
-  return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>;
+  const display = compact ? formatCompact(count) : count.toLocaleString();
+  return <span ref={ref}>{prefix}{display}{suffix}</span>;
 }
 
 /* ─── Role definitions ─── */
@@ -169,12 +178,12 @@ export default function Apply() {
             {[
               { label: "Leaders", value: content.counter_leaders, icon: Users },
               { label: "Countries", value: content.counter_countries, icon: Globe },
-              { label: "Paid Out", value: content.counter_paid, prefix: "$", icon: DollarSign },
+              { label: "Paid Out", value: content.counter_paid, prefix: "$", suffix: "+", compact: true, icon: DollarSign },
             ].map((s) => (
               <div key={s.label} className="bg-card/50 border border-border rounded-xl p-4">
                 <s.icon className="w-5 h-5 text-primary mx-auto mb-1" />
-                <div className="text-2xl md:text-3xl font-bold text-foreground">
-                  <AnimatedCounter target={s.value} prefix={s.prefix} />
+                <div className="text-2xl md:text-3xl font-bold text-foreground truncate">
+                  <AnimatedCounter target={s.value} prefix={s.prefix} suffix={s.suffix} compact={s.compact} />
                 </div>
                 <div className="text-xs text-muted-foreground">{s.label}</div>
               </div>
