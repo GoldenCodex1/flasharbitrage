@@ -54,7 +54,14 @@ export default function Transactions() {
                     <td className={`px-4 py-3 font-semibold ${amount >= 0 ? "text-success" : "text-destructive"}`}>
                       {amount >= 0 ? "+" : ""}${Math.abs(amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{t.description || "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">
+                      {t.description || "—"}
+                      {(t as any)._txRef && (
+                        <Link to={`/tx/${(t as any)._txRef}`} className="ml-2 text-[10px] font-mono text-primary hover:underline">
+                          {String((t as any)._txRef).slice(0, 10)}…
+                        </Link>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{format(new Date(t.created_at), "MMM d, yyyy HH:mm")}</td>
                   </tr>
                 );
