@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
@@ -66,6 +67,11 @@ export default function TradeHistory() {
                         <ArrowRightLeft className="w-3.5 h-3.5 text-primary" />
                         <span className="font-medium font-display">{tradingPair}</span>
                       </div>
+                      {e.transaction_ref && (
+                        <Link to={`/tx/${e.transaction_ref}`} className="text-[10px] font-mono text-primary/80 hover:text-primary">
+                          {String(e.transaction_ref).slice(0, 10)}…{String(e.transaction_ref).slice(-6)}
+                        </Link>
+                      )}
                     </td>
                     <td className="px-4 py-3">${Number(e.amount).toLocaleString()}</td>
                     <td className="px-4 py-3">
