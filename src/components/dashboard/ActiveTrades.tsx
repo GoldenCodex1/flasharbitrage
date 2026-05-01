@@ -35,8 +35,8 @@ export default function ActiveTrades({ entries }: Props) {
               <tr className="border-b border-border/30">
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Trade</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Invested</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">ROI</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Profit</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Status / Progress</th>
               </tr>
             </thead>
             <tbody>
