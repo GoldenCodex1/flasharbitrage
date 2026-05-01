@@ -16,6 +16,7 @@ import Deposit from "@/pages/Deposit";
 import Withdraw from "@/pages/Withdraw";
 import TradeHistory from "@/pages/TradeHistory";
 import Transactions from "@/pages/Transactions";
+import TransactionDetail from "@/pages/TransactionDetail";
 import AutoBot from "@/pages/AutoBot";
 import Referral from "@/pages/Referral";
 import Profile from "@/pages/Profile";
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/trades" element={<ProtectedRoute><AppLayout><TradeHistory /></AppLayout></ProtectedRoute>} />
             <Route path="/trade-history" element={<ProtectedRoute><AppLayout><TradeHistory /></AppLayout></ProtectedRoute>} />
             <Route path="/transactions" element={<ProtectedRoute><AppLayout><Transactions /></AppLayout></ProtectedRoute>} />
+            <Route path="/tx/:transaction_ref" element={<ProtectedRoute><AppLayout><TransactionDetail /></AppLayout></ProtectedRoute>} />
             <Route path="/auto-bot" element={<ProtectedRoute><AppLayout><AutoBot /></AppLayout></ProtectedRoute>} />
             <Route path="/referral" element={<ProtectedRoute><AppLayout><Referral /></AppLayout></ProtectedRoute>} />
             <Route path="/plans" element={<ProtectedRoute><AppLayout><Plans /></AppLayout></ProtectedRoute>} />
