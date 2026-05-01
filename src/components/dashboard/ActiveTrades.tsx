@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import TradeLifecycleRow from "./TradeLifecycleRow";
 
 interface TradeEntryWithTrade extends Tables<"trade_entries"> {
   trades: Tables<"trades"> | null;
@@ -9,12 +10,6 @@ interface TradeEntryWithTrade extends Tables<"trade_entries"> {
 interface Props {
   entries: TradeEntryWithTrade[];
 }
-
-const statusClass: Record<string, string> = {
-  active: "status-badge-info",
-  completing: "status-badge-warning",
-  completed: "status-badge-success",
-};
 
 const MAX_VISIBLE = 5;
 
@@ -40,25 +35,14 @@ export default function ActiveTrades({ entries }: Props) {
               <tr className="border-b border-border/30">
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Trade</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Invested</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">ROI</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Status</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Profit</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground">Status / Progress</th>
               </tr>
             </thead>
             <tbody>
-              {visible.map((entry) => {
-                const roi = entry.trades ? Number(entry.trades.roi_percent) : 0;
-                const expectedProfit = Number(entry.amount) * (roi / 100);
-                return (
-                  <tr key={entry.id} className="border-b border-border/10 hover:bg-secondary/30 transition-colors">
-                    <td className="px-4 py-3 font-medium font-display">{entry.trades?.title ?? "Unknown"}</td>
-                    <td className="px-4 py-3">${Number(entry.amount).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-success font-semibold">+${expectedProfit.toFixed(2)} ({roi}%)</td>
-                    <td className="px-4 py-3">
-                      <span className={statusClass[entry.status] || "status-badge-pending"}>{entry.status}</span>
-                    </td>
-                  </tr>
-                );
-              })}
+              {visible.map((entry) => (
+                <TradeLifecycleRow key={entry.id} entry={entry as any} />
+              ))}
             </tbody>
           </table>
         </div>

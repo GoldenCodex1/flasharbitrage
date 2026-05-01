@@ -1543,31 +1543,46 @@ export type Database = {
         Row: {
           amount: number
           completed_at: string | null
+          final_address: string | null
+          from_address: string | null
           id: string
+          intermediate_address: string | null
+          mid_address: string | null
           profit: number | null
           started_at: string
           status: string
           trade_id: string
+          transaction_ref: string | null
           user_id: string
         }
         Insert: {
           amount: number
           completed_at?: string | null
+          final_address?: string | null
+          from_address?: string | null
           id?: string
+          intermediate_address?: string | null
+          mid_address?: string | null
           profit?: number | null
           started_at?: string
           status?: string
           trade_id: string
+          transaction_ref?: string | null
           user_id: string
         }
         Update: {
           amount?: number
           completed_at?: string | null
+          final_address?: string | null
+          from_address?: string | null
           id?: string
+          intermediate_address?: string | null
+          mid_address?: string | null
           profit?: number | null
           started_at?: string
           status?: string
           trade_id?: string
+          transaction_ref?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1989,6 +2004,11 @@ export type Database = {
       }
       auto_transition_trades: { Args: never; Returns: Json }
       expire_plans: { Args: never; Returns: Json }
+      gen_transaction_ref: {
+        Args: { _trade_id: string; _user_id: string }
+        Returns: string
+      }
+      gen_wallet_address: { Args: { _seed: string }; Returns: string }
       get_user_email: { Args: { _user_id: string }; Returns: string }
       get_user_emails: {
         Args: never
