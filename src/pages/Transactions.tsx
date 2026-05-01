@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
@@ -10,12 +11,22 @@ export default function Transactions() {
   const { data: transactions } = useQuery({
     queryKey: ["all-transactions", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data: tx } = await supabase
         .from("transactions")
         .select("*")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
-      return data ?? [];
+      const tradeRefIds = Array.from(new Set((tx ?? []).filter(t => t.reference_id && (t.type === "trade_investment" || t.type === "trade_return" || t.type === "profit")).map(t => t.reference_id))) as string[];
+      let refMap: Record<string, string> = {};
+      if (tradeRefIds.length && user) {
+        const { data: entries } = await supabase
+          .from("trade_entries")
+          .select("trade_id, transaction_ref")
+          .eq("user_id", user.id)
+          .in("trade_id", tradeRefIds);
+        (entries ?? []).forEach((e: any) => { if (e.transaction_ref) refMap[e.trade_id] = e.transaction_ref; });
+      }
+      return (tx ?? []).map(t => ({ ...t, _txRef: t.reference_id ? refMap[t.reference_id as string] : undefined }));
     },
     enabled: !!user,
   });
