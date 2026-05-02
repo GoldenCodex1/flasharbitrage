@@ -75,23 +75,26 @@ export default function TransactionDetail() {
   const progress = Math.max(0, Math.min(100, ((Math.min(now, endMs) - startMs) / durationMs) * 100));
   const isDone = entry.status === "completed" || entry.status === "settled";
 
+  // Step logic per stability patch:
+  // - Balance Deducted & Trade Executed are confirmed instantly (the moment the trade is joined).
+  // - Settlement Completed only confirms when the trade is settled by the backend (after duration).
   const steps = [
     {
       from: entry.from_address,
       to: entry.mid_address,
-      label: "Funds moved",
-      done: progress > 5,
+      label: "Balance Deducted",
+      done: true,
     },
     {
       from: entry.mid_address,
       to: entry.intermediate_address,
-      label: "Trade executed",
-      done: progress > 50,
+      label: "Trade Executed",
+      done: true,
     },
     {
       from: entry.intermediate_address,
       to: entry.final_address,
-      label: "Funds returned",
+      label: "Settlement Completed",
       done: isDone,
     },
   ];
@@ -198,7 +201,7 @@ export default function TransactionDetail() {
               className="border border-border/30 rounded-lg p-3 space-y-2"
             >
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className={`text-xs font-medium ${s.done ? "text-success" : "text-primary"}`}>Step {i + 1}: {s.label}</span>
+                <span className={`text-xs font-medium ${s.done ? "text-success" : "text-primary"}`}>{s.label}</span>
                 <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                   {s.done ? <CheckCircle2 className="w-3 h-3 text-success" /> : <Clock className="w-3 h-3 animate-pulse" />}
                   <span>{s.done ? "Confirmed" : "Pending"}</span>

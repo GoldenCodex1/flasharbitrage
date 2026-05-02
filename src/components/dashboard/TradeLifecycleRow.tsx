@@ -12,9 +12,8 @@ interface Props {
   entry: Entry;
 }
 
-const STAGE_DURATIONS = [4500, 4500, 4500]; // ms — funds moving, trade executing, asset transferring
-const STAGE_LABELS = ["Funds moving to exchange", "Trade executing", "Asset transferring"];
-const FINAL_LABELS = ["Profit realized", "Funds returning"];
+const STAGE_DURATIONS = [3000, 3000]; // ms — Balance Deducted, Trade Executed (instant-feel intro)
+const INTRO_LABELS = ["Balance Deducted", "Trade Executed"];
 
 function shortRef(ref?: string | null) {
   if (!ref) return "—";
@@ -31,58 +30,52 @@ export default function TradeLifecycleRow({ entry }: Props) {
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (entry.status !== "active") return;
+    if (entry.status === "completed" || entry.status === "settled") return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, [entry.status]);
 
-  // Determine current stage label & progress
   const elapsedSinceStart = now - startMs;
-  const stagePhaseTotal = STAGE_DURATIONS.reduce((a, b) => a + b, 0);
+  const introTotal = STAGE_DURATIONS.reduce((a, b) => a + b, 0);
 
-  const { statusText, progress, currentProfit, finalPhase } = useMemo(() => {
-    if (entry.status === "completed" || entry.status === "settled") {
+  const { statusText, progress, currentProfit } = useMemo(() => {
+    const isSettled = entry.status === "completed" || entry.status === "settled";
+
+    if (isSettled) {
       return {
-        statusText: "Completed",
+        statusText: "Settlement Completed",
         progress: 100,
         currentProfit: Number(entry.profit ?? totalProfit),
-        finalPhase: false,
       };
     }
-    // Initial animation phase
-    if (elapsedSinceStart < stagePhaseTotal) {
-      let acc = 0;
-      let label = STAGE_LABELS[0];
-      for (let i = 0; i < STAGE_DURATIONS.length; i++) {
-        acc += STAGE_DURATIONS[i];
-        if (elapsedSinceStart < acc) {
-          label = STAGE_LABELS[i];
-          break;
-        }
-      }
-      return { statusText: label, progress: 0, currentProfit: 0, finalPhase: false };
+
+    // Brief intro animation (purely visual) — never marks trade complete
+    if (elapsedSinceStart < introTotal) {
+      const label = elapsedSinceStart < STAGE_DURATIONS[0] ? INTRO_LABELS[0] : INTRO_LABELS[1];
+      return { statusText: label, progress: 0, currentProfit: 0 };
     }
-    // Live progress
-    const liveElapsed = Math.min(now - startMs, durationMs);
-    const pct = Math.max(0, Math.min(1, liveElapsed / durationMs));
-    if (pct >= 1) {
-      // Final completion phase (visual only — backend settles separately)
-      const overshoot = (now - endMs) / 1000;
-      const label = overshoot < 3 ? FINAL_LABELS[0] : overshoot < 11 ? FINAL_LABELS[1] : "Completed";
+
+    // Time-based progress, strictly clamped < 100% until backend settles
+    const liveElapsed = Math.max(0, now - startMs);
+    const rawPct = durationMs > 0 ? liveElapsed / durationMs : 0;
+    const pct = Math.min(99.9, rawPct * 100);
+    const profitPct = Math.min(1, rawPct);
+
+    if (now >= endMs) {
+      // Duration elapsed but backend hasn't settled yet — awaiting settlement
       return {
-        statusText: label,
-        progress: 100,
+        statusText: "Awaiting settlement",
+        progress: 99.9,
         currentProfit: totalProfit,
-        finalPhase: true,
       };
     }
+
     return {
-      statusText: "Profit growing",
-      progress: pct * 100,
-      currentProfit: totalProfit * pct,
-      finalPhase: false,
+      statusText: "Trade in progress",
+      progress: pct,
+      currentProfit: totalProfit * profitPct,
     };
-  }, [entry.status, entry.profit, elapsedSinceStart, now, startMs, endMs, durationMs, stagePhaseTotal, totalProfit]);
+  }, [entry.status, entry.profit, elapsedSinceStart, now, startMs, endMs, durationMs, introTotal, totalProfit]);
 
   const isDone = entry.status === "completed" || entry.status === "settled";
 
