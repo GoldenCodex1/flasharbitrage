@@ -49,6 +49,14 @@ const adminNavItems = [
 export default function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { role } = useAdminRole();
+
+  const visibleNav = adminNavItems.filter((item) => {
+    if (!role) return false;
+    if (role === "super_admin") return true;
+    if ((item as any).superOnly) return false;
+    return canAccessPath(role, item.path);
+  });
 
   return (
     <div className="min-h-screen bg-background flex">
