@@ -74,7 +74,7 @@ export default function AdminLayout() {
           </div>
         </div>
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-          {adminNavItems.map((item) => (
+          {visibleNav.map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -130,7 +130,7 @@ export default function AdminLayout() {
                 <button onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
               </div>
               <nav className="space-y-0.5">
-                {adminNavItems.map((item) => (
+                {visibleNav.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
