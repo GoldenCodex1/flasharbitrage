@@ -24,6 +24,8 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
+import { useAdminRole, canAccessPath } from "@/hooks/useAdminRole";
+
 const adminNavItems = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { label: "Trade Engine", path: "/admin/trades", icon: TrendingUp },
@@ -31,15 +33,16 @@ const adminNavItems = [
   { label: "Finance", path: "/admin/finance", icon: DollarSign },
   { label: "Auto Bot Settings", path: "/admin/bot", icon: Bot },
   { label: "Users", path: "/admin/users", icon: Users },
-  { label: "Plans", path: "/admin/plans", icon: Crown },
+  { label: "Admins", path: "/admin/admins", icon: ShieldCheck, superOnly: true },
+  { label: "Plans", path: "/admin/plans", icon: Crown, superOnly: true },
   { label: "Referrals", path: "/admin/referrals", icon: Gift },
   { label: "KYC", path: "/admin/kyc", icon: ShieldCheck },
   { label: "Wallet Settings", path: "/admin/wallets", icon: Wallet },
-  { label: "API & Gateways", path: "/admin/api", icon: Settings },
-  { label: "Infrastructure", path: "/admin/system", icon: Settings },
-  { label: "Email & Notifications", path: "/admin/email", icon: Mail },
-  { label: "Security Logs", path: "/admin/security", icon: Lock },
-  { label: "Homepage Control", path: "/admin/homepage-control", icon: FileText },
+  { label: "API & Gateways", path: "/admin/api", icon: Settings, superOnly: true },
+  { label: "Infrastructure", path: "/admin/system", icon: Settings, superOnly: true },
+  { label: "Email & Notifications", path: "/admin/email", icon: Mail, superOnly: true },
+  { label: "Security Logs", path: "/admin/security", icon: Lock, superOnly: true },
+  { label: "Homepage Control", path: "/admin/homepage-control", icon: FileText, superOnly: true },
   { label: "Applications", path: "/admin/applications", icon: Users },
 ];
 
