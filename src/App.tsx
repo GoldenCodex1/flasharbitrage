@@ -89,28 +89,30 @@ const App = () => (
             {/* Protected Admin Routes */}
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
               <Route index element={<AdminDashboard />} />
-              <Route path="trades" element={<AdminTrades />} />
-              <Route path="trades/create" element={<AdminTradeCreate />} />
-              <Route path="trades/:id" element={<AdminTradeDetail />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="users/:id" element={<AdminUserDetail />} />
-              <Route path="bot" element={<AdminBotSettings />} />
-              <Route path="deposits" element={<AdminDeposits />} />
-              <Route path="withdrawals" element={<AdminWithdrawals />} />
-              <Route path="transactions" element={<AdminTransactions />} />
-              <Route path="finance" element={<AdminFinance />} />
-              <Route path="referrals" element={<AdminReferrals />} />
-              <Route path="kyc" element={<AdminKyc />} />
-              <Route path="wallets" element={<AdminWallets />} />
-              <Route path="api" element={<AdminApiSettings />} />
-              <Route path="system" element={<AdminSystemSettings />} />
-              <Route path="email" element={<AdminEmailSettings />} />
-              <Route path="security" element={<AdminSecurityLogs />} />
-              <Route path="homepage-control" element={<AdminHomepageControl />} />
-              <Route path="plans" element={<AdminPlans />} />
-              <Route path="trades/settlement-logs" element={<AdminSettlementLogs />} />
-              <Route path="trade-engine" element={<AdminTradeEngine />} />
-              <Route path="applications" element={<AdminApplications />} />
+              <Route path="unauthorized" element={<AdminUnauthorized />} />
+              <Route path="admins" element={<AdminRoleRoute allow={["super_admin"]}><AdminAdmins /></AdminRoleRoute>} />
+              <Route path="trades" element={<AdminRoleRoute><AdminTrades /></AdminRoleRoute>} />
+              <Route path="trades/create" element={<AdminRoleRoute><AdminTradeCreate /></AdminRoleRoute>} />
+              <Route path="trades/:id" element={<AdminRoleRoute><AdminTradeDetail /></AdminRoleRoute>} />
+              <Route path="users" element={<AdminRoleRoute><AdminUsers /></AdminRoleRoute>} />
+              <Route path="users/:id" element={<AdminRoleRoute><AdminUserDetail /></AdminRoleRoute>} />
+              <Route path="bot" element={<AdminRoleRoute><AdminBotSettings /></AdminRoleRoute>} />
+              <Route path="deposits" element={<AdminRoleRoute><AdminDeposits /></AdminRoleRoute>} />
+              <Route path="withdrawals" element={<AdminRoleRoute><AdminWithdrawals /></AdminRoleRoute>} />
+              <Route path="transactions" element={<AdminRoleRoute><AdminTransactions /></AdminRoleRoute>} />
+              <Route path="finance" element={<AdminRoleRoute><AdminFinance /></AdminRoleRoute>} />
+              <Route path="referrals" element={<AdminRoleRoute><AdminReferrals /></AdminRoleRoute>} />
+              <Route path="kyc" element={<AdminRoleRoute><AdminKyc /></AdminRoleRoute>} />
+              <Route path="wallets" element={<AdminRoleRoute><AdminWallets /></AdminRoleRoute>} />
+              <Route path="api" element={<AdminRoleRoute allow={["super_admin"]}><AdminApiSettings /></AdminRoleRoute>} />
+              <Route path="system" element={<AdminRoleRoute allow={["super_admin"]}><AdminSystemSettings /></AdminRoleRoute>} />
+              <Route path="email" element={<AdminRoleRoute allow={["super_admin"]}><AdminEmailSettings /></AdminRoleRoute>} />
+              <Route path="security" element={<AdminRoleRoute allow={["super_admin"]}><AdminSecurityLogs /></AdminRoleRoute>} />
+              <Route path="homepage-control" element={<AdminRoleRoute allow={["super_admin"]}><AdminHomepageControl /></AdminRoleRoute>} />
+              <Route path="plans" element={<AdminRoleRoute allow={["super_admin"]}><AdminPlans /></AdminRoleRoute>} />
+              <Route path="trades/settlement-logs" element={<AdminRoleRoute><AdminSettlementLogs /></AdminRoleRoute>} />
+              <Route path="trade-engine" element={<AdminRoleRoute><AdminTradeEngine /></AdminRoleRoute>} />
+              <Route path="applications" element={<AdminRoleRoute><AdminApplications /></AdminRoleRoute>} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
