@@ -201,7 +201,7 @@ export default function TransactionDetail() {
               className="border border-border/30 rounded-lg p-3 space-y-2"
             >
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className={`text-xs font-medium ${s.done ? "text-success" : "text-primary"}`}>Step {i + 1}: {s.label}</span>
+                <span className={`text-xs font-medium ${s.done ? "text-success" : "text-primary"}`}>{s.label}</span>
                 <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                   {s.done ? <CheckCircle2 className="w-3 h-3 text-success" /> : <Clock className="w-3 h-3 animate-pulse" />}
                   <span>{s.done ? "Confirmed" : "Pending"}</span>
