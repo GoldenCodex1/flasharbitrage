@@ -2002,7 +2002,13 @@ export type Database = {
         Args: { _admin_id: string; _withdrawal_id: string }
         Returns: Json
       }
+      assign_admin_role: {
+        Args: { _email: string; _role: string }
+        Returns: Json
+      }
       auto_transition_trades: { Args: never; Returns: Json }
+      current_admin_role: { Args: never; Returns: string }
+      deactivate_admin: { Args: { _target_user_id: string }; Returns: Json }
       expire_plans: { Args: never; Returns: Json }
       gen_transaction_ref: {
         Args: { _trade_id: string; _user_id: string }
@@ -2024,6 +2030,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_any_admin: { Args: never; Returns: boolean }
       is_auto_deposit_enabled: { Args: never; Returns: boolean }
       join_trade: {
         Args: {
@@ -2034,6 +2041,16 @@ export type Database = {
         }
         Returns: Json
       }
+      list_admins: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          role: string
+          user_id: string
+        }[]
+      }
       settle_trade: { Args: { _trade_id: string }; Returns: Json }
       upgrade_plan: {
         Args: { _plan_id: string; _user_id: string }
@@ -2041,7 +2058,14 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role:
+        | "admin"
+        | "user"
+        | "super_admin"
+        | "trade_manager"
+        | "finance_manager"
+        | "support"
+        | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2169,7 +2193,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: [
+        "admin",
+        "user",
+        "super_admin",
+        "trade_manager",
+        "finance_manager",
+        "support",
+        "viewer",
+      ],
     },
   },
 } as const

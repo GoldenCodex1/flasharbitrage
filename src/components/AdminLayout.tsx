@@ -24,6 +24,8 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
+import { useAdminRole, canAccessPath } from "@/hooks/useAdminRole";
+
 const adminNavItems = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { label: "Trade Engine", path: "/admin/trades", icon: TrendingUp },
@@ -31,21 +33,30 @@ const adminNavItems = [
   { label: "Finance", path: "/admin/finance", icon: DollarSign },
   { label: "Auto Bot Settings", path: "/admin/bot", icon: Bot },
   { label: "Users", path: "/admin/users", icon: Users },
-  { label: "Plans", path: "/admin/plans", icon: Crown },
+  { label: "Admins", path: "/admin/admins", icon: ShieldCheck, superOnly: true },
+  { label: "Plans", path: "/admin/plans", icon: Crown, superOnly: true },
   { label: "Referrals", path: "/admin/referrals", icon: Gift },
   { label: "KYC", path: "/admin/kyc", icon: ShieldCheck },
   { label: "Wallet Settings", path: "/admin/wallets", icon: Wallet },
-  { label: "API & Gateways", path: "/admin/api", icon: Settings },
-  { label: "Infrastructure", path: "/admin/system", icon: Settings },
-  { label: "Email & Notifications", path: "/admin/email", icon: Mail },
-  { label: "Security Logs", path: "/admin/security", icon: Lock },
-  { label: "Homepage Control", path: "/admin/homepage-control", icon: FileText },
+  { label: "API & Gateways", path: "/admin/api", icon: Settings, superOnly: true },
+  { label: "Infrastructure", path: "/admin/system", icon: Settings, superOnly: true },
+  { label: "Email & Notifications", path: "/admin/email", icon: Mail, superOnly: true },
+  { label: "Security Logs", path: "/admin/security", icon: Lock, superOnly: true },
+  { label: "Homepage Control", path: "/admin/homepage-control", icon: FileText, superOnly: true },
   { label: "Applications", path: "/admin/applications", icon: Users },
 ];
 
 export default function AdminLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { role } = useAdminRole();
+
+  const visibleNav = adminNavItems.filter((item) => {
+    if (!role) return false;
+    if (role === "super_admin") return true;
+    if ((item as any).superOnly) return false;
+    return canAccessPath(role, item.path);
+  });
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -63,7 +74,7 @@ export default function AdminLayout() {
           </div>
         </div>
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-          {adminNavItems.map((item) => (
+          {visibleNav.map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -119,7 +130,7 @@ export default function AdminLayout() {
                 <button onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
               </div>
               <nav className="space-y-0.5">
-                {adminNavItems.map((item) => (
+                {visibleNav.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
