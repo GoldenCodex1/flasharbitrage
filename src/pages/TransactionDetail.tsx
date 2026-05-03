@@ -35,6 +35,7 @@ export default function TransactionDetail() {
   const { transaction_ref } = useParams<{ transaction_ref: string }>();
   const { user } = useAuth();
   const [refTooltip, setRefTooltip] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   const { data: entry, isLoading } = useQuery({
     queryKey: ["tx", transaction_ref, user?.id],
@@ -49,6 +50,14 @@ export default function TransactionDetail() {
     },
     enabled: !!transaction_ref && !!user,
   });
+
+  const isDone = entry?.status === "completed" || entry?.status === "settled";
+
+  useEffect(() => {
+    if (!entry || isDone) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [entry, isDone]);
 
   if (isLoading) {
     return <div className="text-center text-muted-foreground py-12 text-sm">Loading transaction…</div>;
@@ -71,15 +80,6 @@ export default function TransactionDetail() {
   const durationMs = (trade ? Number(trade.duration_hours) : 1) * 3600 * 1000;
   const startMs = new Date(entry.started_at).getTime();
   const endMs = entry.completed_at ? new Date(entry.completed_at).getTime() : startMs + durationMs;
-  const isDone = entry.status === "completed" || entry.status === "settled";
-
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (isDone) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, [isDone]);
-
   const rawPct = durationMs > 0 ? ((now - startMs) / durationMs) * 100 : 0;
   const progress = isDone ? 100 : Math.max(0, Math.min(99.9, rawPct));
 
