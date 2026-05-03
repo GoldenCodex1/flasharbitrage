@@ -71,9 +71,17 @@ export default function TransactionDetail() {
   const durationMs = (trade ? Number(trade.duration_hours) : 1) * 3600 * 1000;
   const startMs = new Date(entry.started_at).getTime();
   const endMs = entry.completed_at ? new Date(entry.completed_at).getTime() : startMs + durationMs;
-  const now = Date.now();
-  const progress = Math.max(0, Math.min(100, ((Math.min(now, endMs) - startMs) / durationMs) * 100));
   const isDone = entry.status === "completed" || entry.status === "settled";
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (isDone) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [isDone]);
+
+  const rawPct = durationMs > 0 ? ((now - startMs) / durationMs) * 100 : 0;
+  const progress = isDone ? 100 : Math.max(0, Math.min(99.9, rawPct));
 
   // Step logic per stability patch:
   // - Balance Deducted & Trade Executed are confirmed instantly (the moment the trade is joined).
