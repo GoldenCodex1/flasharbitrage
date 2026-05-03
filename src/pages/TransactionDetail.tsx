@@ -2,7 +2,7 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowRight, Copy, CheckCircle2, Clock, ExternalLink, ChevronLeft } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,6 +35,7 @@ export default function TransactionDetail() {
   const { transaction_ref } = useParams<{ transaction_ref: string }>();
   const { user } = useAuth();
   const [refTooltip, setRefTooltip] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   const { data: entry, isLoading } = useQuery({
     queryKey: ["tx", transaction_ref, user?.id],
@@ -49,6 +50,14 @@ export default function TransactionDetail() {
     },
     enabled: !!transaction_ref && !!user,
   });
+
+  const isDone = entry?.status === "completed" || entry?.status === "settled";
+
+  useEffect(() => {
+    if (!entry || isDone) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [entry, isDone]);
 
   if (isLoading) {
     return <div className="text-center text-muted-foreground py-12 text-sm">Loading transaction…</div>;
@@ -71,9 +80,8 @@ export default function TransactionDetail() {
   const durationMs = (trade ? Number(trade.duration_hours) : 1) * 3600 * 1000;
   const startMs = new Date(entry.started_at).getTime();
   const endMs = entry.completed_at ? new Date(entry.completed_at).getTime() : startMs + durationMs;
-  const now = Date.now();
-  const progress = Math.max(0, Math.min(100, ((Math.min(now, endMs) - startMs) / durationMs) * 100));
-  const isDone = entry.status === "completed" || entry.status === "settled";
+  const rawPct = durationMs > 0 ? ((now - startMs) / durationMs) * 100 : 0;
+  const progress = isDone ? 100 : Math.max(0, Math.min(99.9, rawPct));
 
   // Step logic per stability patch:
   // - Balance Deducted & Trade Executed are confirmed instantly (the moment the trade is joined).
