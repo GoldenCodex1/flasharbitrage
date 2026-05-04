@@ -13,6 +13,7 @@ import FloatingParticles from "@/components/homepage/FloatingParticles";
 import LiveActivityFeed from "@/components/homepage/LiveActivityFeed";
 import ProfitBubbles from "@/components/homepage/ProfitBubbles";
 import InteractiveTradePreview from "@/components/homepage/InteractiveTradePreview";
+import ApplyCta from "@/components/homepage/ApplyCta";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { useLiveElementSettings } from "@/hooks/useLiveElementSettings";
 
