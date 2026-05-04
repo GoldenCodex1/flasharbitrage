@@ -36,6 +36,7 @@ export default function Homepage() {
       <ReferralSection />
       <SecuritySection />
       <LiveStats />
+      <ApplyCta />
       <FaqSection />
       <HomepageFooter />
     </div>
