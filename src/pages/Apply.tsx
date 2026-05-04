@@ -13,6 +13,7 @@ import { Globe, Users, DollarSign, Crown, Shield, Target, ChevronRight, ChevronL
 import SiteLogo from "@/components/SiteLogo";
 import { Link } from "react-router-dom";
 import { useApplyContent } from "@/hooks/useApplyContent";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /* ─── Format large numbers ─── */
 function formatCompact(n: number): string {
@@ -106,7 +107,7 @@ export default function Apply() {
   const set = (key: string, val: string) => setForm(prev => ({ ...prev, [key]: val }));
 
   const canNext = () => {
-    if (step === 0) return form.full_name && form.email && form.phone;
+    if (step === 0) return selectedRole && form.full_name && form.email && form.phone;
     if (step === 1) return form.country && form.city;
     if (step === 2) return form.experience && form.network_size;
     if (step === 3) return form.motivation;
@@ -371,6 +372,17 @@ export default function Apply() {
               <motion.div key={step} initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }} transition={{ duration: 0.2 }}>
                 {step === 0 && (
                   <div className="space-y-4">
+                    <div>
+                      <Label>Role *</Label>
+                      <Select value={selectedRole ?? ""} onValueChange={(v) => setSelectedRole(v)}>
+                        <SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger>
+                        <SelectContent>
+                          {ROLES.map((r) => (
+                            <SelectItem key={r.key} value={r.key}>{r.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div><Label>Full Name *</Label><Input value={form.full_name} onChange={(e) => set("full_name", e.target.value)} placeholder="John Doe" /></div>
                     <div><Label>Email *</Label><Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="john@example.com" /></div>
                     <div><Label>Phone *</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+1 234 567 8900" /></div>
