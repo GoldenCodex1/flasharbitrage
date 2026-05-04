@@ -107,7 +107,7 @@ export default function Apply() {
   const set = (key: string, val: string) => setForm(prev => ({ ...prev, [key]: val }));
 
   const canNext = () => {
-    if (step === 0) return form.full_name && form.email && form.phone;
+    if (step === 0) return selectedRole && form.full_name && form.email && form.phone;
     if (step === 1) return form.country && form.city;
     if (step === 2) return form.experience && form.network_size;
     if (step === 3) return form.motivation;
