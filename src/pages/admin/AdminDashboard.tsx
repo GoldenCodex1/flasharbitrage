@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import SettlementEngineStatus from "@/components/admin/SettlementEngineStatus";
+import AdminActivityFeed from "@/components/admin/AdminActivityFeed";
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 const item = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.35 } } };
@@ -204,6 +205,11 @@ export default function AdminDashboard() {
       {/* ── SETTLEMENT ENGINE ── */}
       <motion.div variants={item}>
         <SettlementEngineStatus />
+      </motion.div>
+
+      {/* ── ADMIN ACTIVITY ── */}
+      <motion.div variants={item}>
+        <AdminActivityFeed />
       </motion.div>
 
       {/* ── 2. FINANCIAL FLOW ── */}

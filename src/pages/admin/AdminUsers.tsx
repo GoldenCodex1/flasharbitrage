@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
   Search, X, ChevronLeft, ChevronRight, Users, ShieldCheck, Ban,
-  DollarSign, AlertTriangle, Filter, RefreshCw, Mail,
+  DollarSign, AlertTriangle, Filter, RefreshCw, Mail, Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,8 @@ export default function AdminUsers() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterKyc, setFilterKyc] = useState("all");
   const [filterRisk, setFilterRisk] = useState("all");
+  const [filterPlan, setFilterPlan] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
   const [showFilters, setShowFilters] = useState(false);
 
   // Fetch profiles
@@ -173,13 +175,14 @@ export default function AdminUsers() {
 
   // Filtering - now also searches by email
   const filtered = useMemo(() => {
-    return enrichedUsers.filter((u) => {
+    const list = enrichedUsers.filter((u) => {
       if (filterStatus === "active" && u.is_frozen) return false;
       if (filterStatus === "frozen" && !u.is_frozen) return false;
       if (filterKyc !== "all" && u.kyc_status !== filterKyc) return false;
       if (filterRisk === "high" && u.riskScore <= 70) return false;
       if (filterRisk === "medium" && (u.riskScore <= 30 || u.riskScore > 70)) return false;
       if (filterRisk === "low" && u.riskScore > 30) return false;
+      if (filterPlan !== "all" && u.planName !== filterPlan) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         return (
@@ -191,7 +194,13 @@ export default function AdminUsers() {
       }
       return true;
     });
-  }, [enrichedUsers, filterStatus, filterKyc, filterRisk, search]);
+    const sorted = [...list];
+    if (sortBy === "balance_desc") sorted.sort((a, b) => b.balance - a.balance);
+    else if (sortBy === "balance_asc") sorted.sort((a, b) => a.balance - b.balance);
+    else if (sortBy === "deposited") sorted.sort((a, b) => b.totalDeposited - a.totalDeposited);
+    else if (sortBy === "risk") sorted.sort((a, b) => b.riskScore - a.riskScore);
+    return sorted;
+  }, [enrichedUsers, filterStatus, filterKyc, filterRisk, filterPlan, sortBy, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
@@ -237,9 +246,25 @@ export default function AdminUsers() {
           <h1 className="font-display font-bold text-xl sm:text-2xl">User Governance</h1>
           <p className="text-sm text-muted-foreground">Monitor, manage, and control platform users</p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} className="gap-2 self-start">
-          <RefreshCw className="h-3.5 w-3.5" /> Refresh
-        </Button>
+        <div className="flex gap-2 self-start">
+          <Button variant="outline" size="sm" onClick={refresh} className="gap-2">
+            <RefreshCw className="h-3.5 w-3.5" /> Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            if (!filtered.length) { toast.error("Nothing to export"); return; }
+            const headers = ["full_name", "email", "user_id", "planName", "kyc_status", "is_frozen", "balance", "totalDeposited", "totalWithdrawn", "lockedBalance", "riskScore", "created_at"];
+            const rows = filtered.map((u) => headers.map((h) => `"${String((u as any)[h] ?? "").replace(/"/g, '""')}"`).join(","));
+            const csv = [headers.join(","), ...rows].join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url;
+            a.download = `users-${new Date().toISOString().split("T")[0]}.csv`; a.click();
+            URL.revokeObjectURL(url);
+            toast.success(`Exported ${filtered.length} users`);
+          }} className="gap-2">
+            <Download className="h-3.5 w-3.5" /> CSV
+          </Button>
+        </div>
       </div>
 
       {/* KPI Row */}
@@ -293,7 +318,7 @@ export default function AdminUsers() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="glass-card p-4 grid grid-cols-1 sm:grid-cols-3 gap-3"
+            className="glass-card p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"
           >
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground font-medium">Account Status</label>
@@ -327,6 +352,31 @@ export default function AdminUsers() {
                   <SelectItem value="low">Low (0–30)</SelectItem>
                   <SelectItem value="medium">Medium (31–70)</SelectItem>
                   <SelectItem value="high">High (71–100)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground font-medium">Plan</label>
+              <Select value={filterPlan} onValueChange={(v) => { setFilterPlan(v); setPage(0); }}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {plans?.map((p: any) => (
+                    <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground font-medium">Sort By</label>
+              <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(0); }}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="balance_desc">Balance (High → Low)</SelectItem>
+                  <SelectItem value="balance_asc">Balance (Low → High)</SelectItem>
+                  <SelectItem value="deposited">Top Depositors</SelectItem>
+                  <SelectItem value="risk">Risk Score</SelectItem>
                 </SelectContent>
               </Select>
             </div>

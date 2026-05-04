@@ -34,6 +34,7 @@ const adminNavItems = [
   { label: "Auto Bot Settings", path: "/admin/bot", icon: Bot },
   { label: "Users", path: "/admin/users", icon: Users },
   { label: "Admins", path: "/admin/admins", icon: ShieldCheck, superOnly: true },
+  { label: "Audit Logs", path: "/admin/audit-logs", icon: FileText, superOnly: true },
   { label: "Plans", path: "/admin/plans", icon: Crown, superOnly: true },
   { label: "Referrals", path: "/admin/referrals", icon: Gift },
   { label: "KYC", path: "/admin/kyc", icon: ShieldCheck },
