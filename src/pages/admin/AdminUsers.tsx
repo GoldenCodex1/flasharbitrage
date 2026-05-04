@@ -318,7 +318,7 @@ export default function AdminUsers() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="glass-card p-4 grid grid-cols-1 sm:grid-cols-3 gap-3"
+            className="glass-card p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"
           >
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground font-medium">Account Status</label>
@@ -352,6 +352,31 @@ export default function AdminUsers() {
                   <SelectItem value="low">Low (0–30)</SelectItem>
                   <SelectItem value="medium">Medium (31–70)</SelectItem>
                   <SelectItem value="high">High (71–100)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground font-medium">Plan</label>
+              <Select value={filterPlan} onValueChange={(v) => { setFilterPlan(v); setPage(0); }}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {plans?.map((p: any) => (
+                    <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground font-medium">Sort By</label>
+              <Select value={sortBy} onValueChange={(v) => { setSortBy(v); setPage(0); }}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Most Recent</SelectItem>
+                  <SelectItem value="balance_desc">Balance (High → Low)</SelectItem>
+                  <SelectItem value="balance_asc">Balance (Low → High)</SelectItem>
+                  <SelectItem value="deposited">Top Depositors</SelectItem>
+                  <SelectItem value="risk">Risk Score</SelectItem>
                 </SelectContent>
               </Select>
             </div>
