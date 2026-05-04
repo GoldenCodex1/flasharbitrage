@@ -50,6 +50,7 @@ import NotFound from "@/pages/NotFound";
 import Apply from "@/pages/Apply";
 import AdminApplications from "@/pages/admin/AdminApplications";
 import AdminAdmins from "@/pages/admin/AdminAdmins";
+import AdminAuditLogs from "@/pages/admin/AdminAuditLogs";
 import AdminUnauthorized from "@/pages/admin/AdminUnauthorized";
 import AdminRoleRoute from "@/components/AdminRoleRoute";
 
@@ -91,6 +92,7 @@ const App = () => (
               <Route index element={<AdminDashboard />} />
               <Route path="unauthorized" element={<AdminUnauthorized />} />
               <Route path="admins" element={<AdminRoleRoute allow={["super_admin"]}><AdminAdmins /></AdminRoleRoute>} />
+              <Route path="audit-logs" element={<AdminRoleRoute allow={["super_admin"]}><AdminAuditLogs /></AdminRoleRoute>} />
               <Route path="trades" element={<AdminRoleRoute><AdminTrades /></AdminRoleRoute>} />
               <Route path="trades/create" element={<AdminRoleRoute><AdminTradeCreate /></AdminRoleRoute>} />
               <Route path="trades/:id" element={<AdminRoleRoute><AdminTradeDetail /></AdminRoleRoute>} />
