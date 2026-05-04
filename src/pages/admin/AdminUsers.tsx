@@ -246,23 +246,25 @@ export default function AdminUsers() {
           <h1 className="font-display font-bold text-xl sm:text-2xl">User Governance</h1>
           <p className="text-sm text-muted-foreground">Monitor, manage, and control platform users</p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} className="gap-2 self-start">
-          <RefreshCw className="h-3.5 w-3.5" /> Refresh
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => {
-          if (!filtered.length) { toast.error("Nothing to export"); return; }
-          const headers = ["full_name", "email", "user_id", "planName", "kyc_status", "is_frozen", "balance", "totalDeposited", "totalWithdrawn", "lockedBalance", "riskScore", "created_at"];
-          const rows = filtered.map((u) => headers.map((h) => `"${String((u as any)[h] ?? "").replace(/"/g, '""')}"`).join(","));
-          const csv = [headers.join(","), ...rows].join("\n");
-          const blob = new Blob([csv], { type: "text/csv" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a"); a.href = url;
-          a.download = `users-${new Date().toISOString().split("T")[0]}.csv`; a.click();
-          URL.revokeObjectURL(url);
-          toast.success(`Exported ${filtered.length} users`);
-        }} className="gap-2 self-start">
-          <Download className="h-3.5 w-3.5" /> CSV
-        </Button>
+        <div className="flex gap-2 self-start">
+          <Button variant="outline" size="sm" onClick={refresh} className="gap-2">
+            <RefreshCw className="h-3.5 w-3.5" /> Refresh
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => {
+            if (!filtered.length) { toast.error("Nothing to export"); return; }
+            const headers = ["full_name", "email", "user_id", "planName", "kyc_status", "is_frozen", "balance", "totalDeposited", "totalWithdrawn", "lockedBalance", "riskScore", "created_at"];
+            const rows = filtered.map((u) => headers.map((h) => `"${String((u as any)[h] ?? "").replace(/"/g, '""')}"`).join(","));
+            const csv = [headers.join(","), ...rows].join("\n");
+            const blob = new Blob([csv], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a"); a.href = url;
+            a.download = `users-${new Date().toISOString().split("T")[0]}.csv`; a.click();
+            URL.revokeObjectURL(url);
+            toast.success(`Exported ${filtered.length} users`);
+          }} className="gap-2">
+            <Download className="h-3.5 w-3.5" /> CSV
+          </Button>
+        </div>
       </div>
 
       {/* KPI Row */}
