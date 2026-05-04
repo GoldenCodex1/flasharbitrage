@@ -13,6 +13,7 @@ import { Globe, Users, DollarSign, Crown, Shield, Target, ChevronRight, ChevronL
 import SiteLogo from "@/components/SiteLogo";
 import { Link } from "react-router-dom";
 import { useApplyContent } from "@/hooks/useApplyContent";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 /* ─── Format large numbers ─── */
 function formatCompact(n: number): string {
