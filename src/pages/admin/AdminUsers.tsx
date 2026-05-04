@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import {
   Search, X, ChevronLeft, ChevronRight, Users, ShieldCheck, Ban,
-  DollarSign, AlertTriangle, Filter, RefreshCw, Mail,
+  DollarSign, AlertTriangle, Filter, RefreshCw, Mail, Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -49,6 +49,8 @@ export default function AdminUsers() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterKyc, setFilterKyc] = useState("all");
   const [filterRisk, setFilterRisk] = useState("all");
+  const [filterPlan, setFilterPlan] = useState("all");
+  const [sortBy, setSortBy] = useState("recent");
   const [showFilters, setShowFilters] = useState(false);
 
   // Fetch profiles
@@ -173,13 +175,14 @@ export default function AdminUsers() {
 
   // Filtering - now also searches by email
   const filtered = useMemo(() => {
-    return enrichedUsers.filter((u) => {
+    const list = enrichedUsers.filter((u) => {
       if (filterStatus === "active" && u.is_frozen) return false;
       if (filterStatus === "frozen" && !u.is_frozen) return false;
       if (filterKyc !== "all" && u.kyc_status !== filterKyc) return false;
       if (filterRisk === "high" && u.riskScore <= 70) return false;
       if (filterRisk === "medium" && (u.riskScore <= 30 || u.riskScore > 70)) return false;
       if (filterRisk === "low" && u.riskScore > 30) return false;
+      if (filterPlan !== "all" && u.planName !== filterPlan) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         return (
@@ -191,7 +194,13 @@ export default function AdminUsers() {
       }
       return true;
     });
-  }, [enrichedUsers, filterStatus, filterKyc, filterRisk, search]);
+    const sorted = [...list];
+    if (sortBy === "balance_desc") sorted.sort((a, b) => b.balance - a.balance);
+    else if (sortBy === "balance_asc") sorted.sort((a, b) => a.balance - b.balance);
+    else if (sortBy === "deposited") sorted.sort((a, b) => b.totalDeposited - a.totalDeposited);
+    else if (sortBy === "risk") sorted.sort((a, b) => b.riskScore - a.riskScore);
+    return sorted;
+  }, [enrichedUsers, filterStatus, filterKyc, filterRisk, filterPlan, sortBy, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
