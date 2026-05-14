@@ -22,17 +22,18 @@ export function useSiteSettings() {
       });
   }, []);
 
-  // Update favicon in DOM
+  // Update favicon in DOM (remove all existing icon links, then add fresh)
   useEffect(() => {
-    if (settings.favicon_url) {
-      let link = document.querySelector("link[rel='icon']") as HTMLLinkElement;
-      if (!link) {
-        link = document.createElement("link");
-        link.rel = "icon";
-        document.head.appendChild(link);
-      }
-      link.href = settings.favicon_url;
-    }
+    if (!settings.favicon_url) return;
+    document
+      .querySelectorAll("link[rel~='icon'], link[rel='shortcut icon']")
+      .forEach((el) => el.parentNode?.removeChild(el));
+    const link = document.createElement("link");
+    link.rel = "icon";
+    link.type = "image/png";
+    // cache-bust so browsers don't keep the old one
+    link.href = `${settings.favicon_url}?v=${Date.now()}`;
+    document.head.appendChild(link);
   }, [settings.favicon_url]);
 
   return settings;
