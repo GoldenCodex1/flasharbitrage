@@ -53,8 +53,14 @@ import AdminAdmins from "@/pages/admin/AdminAdmins";
 import AdminAuditLogs from "@/pages/admin/AdminAuditLogs";
 import AdminUnauthorized from "@/pages/admin/AdminUnauthorized";
 import AdminRoleRoute from "@/components/AdminRoleRoute";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const queryClient = new QueryClient();
+
+const SiteSettingsBootstrap = () => {
+  useSiteSettings();
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -63,6 +69,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <SiteSettingsBootstrap />
           <TawkToWidget />
           <Routes>
             {/* Public Routes */}
