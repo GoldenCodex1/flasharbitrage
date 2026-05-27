@@ -143,6 +143,11 @@ export default function TransactionDetail() {
           <div className="text-right">
             <div className="text-xs text-muted-foreground">Trading Pair</div>
             <div className="font-display font-bold">{trade?.trading_pair ?? trade?.title ?? "—"}</div>
+            {trade?.network && (
+              <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary uppercase tracking-wide">
+                Network: {trade.network}
+              </div>
+            )}
           </div>
         </div>
       </div>
