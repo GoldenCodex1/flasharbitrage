@@ -124,9 +124,8 @@ Deno.serve(async (req) => {
 
       const expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000).toISOString();
 
-      // Pick a realistic blockchain network for this trade
-      const networks = ["TRC20", "ERC20", "BEP20", "BTC", "SOL"];
-      const network = networks[Math.floor(Math.random() * networks.length)];
+      // Resolve correct blockchain network from the trading pair (asset-aware)
+      const network = resolveNetworkForPair(pair);
 
       const { data: trade, error: insertError } = await supabase.from("trades").insert({
         title: `${pair} Arbitrage`,
@@ -193,4 +192,20 @@ function json(data: any) {
   return new Response(JSON.stringify(data), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+function resolveNetworkForPair(pair: string): string {
+  if (!pair) return "ERC20";
+  const base = pair.split("/")[0].toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const TRC20 = ["TRX","SUN","JST","WIN","BTT","USDTTRC20","USDDTRC20"];
+  const BTC   = ["BTC","WBTC","BITCOIN"];
+  const SOL   = ["SOL","RAY","SRM","BONK","JTO","PYTH","WIF","JUP"];
+  const BEP20 = ["BNB","CAKE","XVS","SXP","BAKE","BURGER","ALPACA"];
+  const ERC20 = ["ETH","LINK","UNI","SHIB","PEPE","AAVE","MKR","SNX","CRV","LDO","ARB","OP","MATIC","USDT","USDC","DAI"];
+  if (TRC20.includes(base)) return "TRC20";
+  if (BTC.includes(base))   return "BTC";
+  if (SOL.includes(base))   return "SOL";
+  if (BEP20.includes(base)) return "BEP20";
+  if (ERC20.includes(base)) return "ERC20";
+  return "ERC20";
 }
