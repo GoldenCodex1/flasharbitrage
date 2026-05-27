@@ -1694,6 +1694,7 @@ export type Database = {
           id: string
           max_investment: number
           min_investment: number
+          network: string | null
           risk_level: string
           roi_percent: number
           sell_exchange: string
@@ -1721,6 +1722,7 @@ export type Database = {
           id?: string
           max_investment: number
           min_investment: number
+          network?: string | null
           risk_level?: string
           roi_percent: number
           sell_exchange?: string
@@ -1748,6 +1750,7 @@ export type Database = {
           id?: string
           max_investment?: number
           min_investment?: number
+          network?: string | null
           risk_level?: string
           roi_percent?: number
           sell_exchange?: string
@@ -2015,6 +2018,10 @@ export type Database = {
         Returns: string
       }
       gen_wallet_address: { Args: { _seed: string }; Returns: string }
+      gen_wallet_address_for_network: {
+        Args: { _network: string; _seed: string }
+        Returns: string
+      }
       get_user_email: { Args: { _user_id: string }; Returns: string }
       get_user_emails: {
         Args: never
