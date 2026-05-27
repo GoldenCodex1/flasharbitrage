@@ -124,9 +124,8 @@ Deno.serve(async (req) => {
 
       const expiresAt = new Date(Date.now() + duration * 60 * 60 * 1000).toISOString();
 
-      // Pick a realistic blockchain network for this trade
-      const networks = ["TRC20", "ERC20", "BEP20", "BTC", "SOL"];
-      const network = networks[Math.floor(Math.random() * networks.length)];
+      // Resolve correct blockchain network from the trading pair (asset-aware)
+      const network = resolveNetworkForPair(pair);
 
       const { data: trade, error: insertError } = await supabase.from("trades").insert({
         title: `${pair} Arbitrage`,
