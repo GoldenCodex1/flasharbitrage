@@ -2058,6 +2058,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      resolve_network_for_pair: { Args: { _pair: string }; Returns: string }
       settle_trade: { Args: { _trade_id: string }; Returns: Json }
       upgrade_plan: {
         Args: { _plan_id: string; _user_id: string }
