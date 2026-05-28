@@ -15,8 +15,6 @@ export default function AdminTradeCreate() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: "",
-  const [form, setForm] = useState({
-    title: "",
     trading_pair: "",
     strategy_type: "arbitrage",
     roi_percent: "",
