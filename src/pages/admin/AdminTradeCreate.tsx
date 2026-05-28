@@ -63,6 +63,7 @@ export default function AdminTradeCreate() {
       description: form.description || null,
       buy_exchange: form.buy_exchange,
       sell_exchange: form.sell_exchange,
+      network: form.network,
       created_by: user?.id ?? null,
       status: "draft",
     } as any);
