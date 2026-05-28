@@ -15,6 +15,8 @@ export default function AdminTradeCreate() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     title: "",
+  const [form, setForm] = useState({
+    title: "",
     trading_pair: "",
     strategy_type: "arbitrage",
     roi_percent: "",
@@ -29,10 +31,8 @@ export default function AdminTradeCreate() {
     description: "",
     buy_exchange: "",
     sell_exchange: "",
+    network: "ERC20",
   });
-
-  const set = (key: string, value: string | boolean) => setForm((p) => ({ ...p, [key]: value }));
-
   // Auto-generate title from trading pair + strategy
   const autoTitle = form.trading_pair
     ? `${form.trading_pair} ${form.strategy_type.charAt(0).toUpperCase() + form.strategy_type.slice(1)} Sprint`
