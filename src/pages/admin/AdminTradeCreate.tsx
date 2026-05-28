@@ -31,6 +31,9 @@ export default function AdminTradeCreate() {
     sell_exchange: "",
     network: "ERC20",
   });
+
+  const set = (key: string, value: string | boolean) => setForm((p) => ({ ...p, [key]: value }));
+
   // Auto-generate title from trading pair + strategy
   const autoTitle = form.trading_pair
     ? `${form.trading_pair} ${form.strategy_type.charAt(0).toUpperCase() + form.strategy_type.slice(1)} Sprint`
