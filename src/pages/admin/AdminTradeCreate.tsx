@@ -123,6 +123,20 @@ export default function AdminTradeCreate() {
             </datalist>
           </div>
 
+          <div className="sm:col-span-2">
+            <label className="text-xs text-muted-foreground mb-1 block">Blockchain Network *</label>
+            <select value={form.network} onChange={(e) => set("network", e.target.value)} className={FIELD_CLASS}>
+              <option value="ERC20">ERC20 (Ethereum)</option>
+              <option value="BEP20">BEP20 (BNB Smart Chain)</option>
+              <option value="TRC20">TRC20 (Tron)</option>
+              <option value="BTC">BTC (Bitcoin)</option>
+              <option value="SOL">SOL (Solana)</option>
+              <option value="POLYGON">POLYGON (Matic)</option>
+              <option value="ARBITRUM">ARBITRUM</option>
+            </select>
+            <p className="text-[10px] text-muted-foreground mt-1">Wallet flow addresses will use this network format.</p>
+          </div>
+
           <div>
             <label className="text-xs text-muted-foreground mb-1 block">ROI % *</label>
             <input type="number" value={form.roi_percent} onChange={(e) => set("roi_percent", e.target.value)} className={FIELD_CLASS} placeholder="e.g. 8.5" />
