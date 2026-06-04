@@ -26,7 +26,6 @@ Deno.serve(async (req) => {
     const payload: EmailPayload = await req.json();
     const { type, user_id, variables = {} } = payload;
 
-    // Get email settings
     const { data: settings } = await supabase
       .from("email_settings")
       .select("*")
@@ -40,7 +39,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if this notification type is enabled
     const toggleMap: Record<string, boolean> = {
       signup: settings.notify_signup,
       deposit: settings.notify_deposit,
@@ -55,7 +53,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get user email from auth
     const { data: userData } = await supabase.auth.admin.getUserById(user_id);
     if (!userData?.user?.email) {
       return new Response(
@@ -64,7 +61,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get user profile for name
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name")
@@ -76,7 +72,6 @@ Deno.serve(async (req) => {
       ...variables,
     };
 
-    // Select subject and body based on type
     const subjectMap: Record<string, string> = {
       signup: settings.signup_subject,
       deposit: settings.deposit_subject,
@@ -93,56 +88,65 @@ Deno.serve(async (req) => {
     let subject = subjectMap[type];
     let body = bodyMap[type];
 
-    // Replace template variables
     for (const [key, value] of Object.entries(vars)) {
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, "g");
-      subject = subject.replace(regex, value);
-      body = body.replace(regex, value);
+      subject = subject.replace(regex, String(value));
+      body = body.replace(regex, String(value));
     }
 
-    // Get Resend API key — prefer DB setting, fallback to env
-    const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      console.error("RESEND_API_KEY not configured");
+    // Mailgun config
+    const apiKey = (settings.mailgun_api_key || Deno.env.get("MAILGUN_API_KEY") || "").trim();
+    const domain = (settings.mailgun_domain || Deno.env.get("MAILGUN_DOMAIN") || "").trim();
+    const region = (settings.mailgun_region || "us").toLowerCase();
+
+    if (!apiKey || !domain) {
       return new Response(
-        JSON.stringify({ error: "Resend API key not configured. Add it in Admin → Email & Notifications." }),
+        JSON.stringify({ error: "Mailgun not configured. Add API key and domain in Admin → Email & Notifications." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Send via Resend
-    const resendRes = await fetch("https://api.resend.com/emails", {
+    const host = region === "eu" ? "api.eu.mailgun.net" : "api.mailgun.net";
+    const url = `https://${host}/v3/${domain}/messages`;
+
+    const form = new URLSearchParams();
+    form.append("from", `${settings.sender_name} <${settings.sender_email}>`);
+    form.append("to", userData.user.email);
+    form.append("subject", subject);
+    form.append("html", body.replace(/\n/g, "<br>"));
+    form.append("text", body);
+
+    const auth = "Basic " + btoa(`api:${apiKey}`);
+
+    const mgRes = await fetch(url, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${resendApiKey}`,
-        "Content-Type": "application/json",
+        Authorization: auth,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify({
-        from: `${settings.sender_name} <${settings.sender_email}>`,
-        to: [userData.user.email],
-        subject,
-        html: body.replace(/\n/g, "<br>"),
-      }),
+      body: form.toString(),
     });
 
-    const resendData = await resendRes.json();
+    const mgText = await mgRes.text();
+    let mgData: any = {};
+    try { mgData = JSON.parse(mgText); } catch { mgData = { raw: mgText }; }
 
-    if (!resendRes.ok) {
-      console.error("Resend error:", resendData);
+    if (!mgRes.ok) {
+      console.error("Mailgun error:", mgRes.status, mgData);
       return new Response(
-        JSON.stringify({ error: "Failed to send email", details: resendData }),
+        JSON.stringify({ error: "Failed to send email", status: mgRes.status, details: mgData }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     return new Response(
-      JSON.stringify({ success: true, id: resendData.id }),
+      JSON.stringify({ success: true, id: mgData.id }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
     console.error("send-email error:", err);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: (err as Error).message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -13,6 +13,9 @@ interface EmailSettings {
   sender_name: string;
   sender_email: string;
   resend_api_key: string;
+  mailgun_api_key: string;
+  mailgun_domain: string;
+  mailgun_region: string;
   notify_signup: boolean;
   notify_deposit: boolean;
   notify_withdrawal: boolean;
