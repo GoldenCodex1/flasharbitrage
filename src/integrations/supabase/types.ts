@@ -705,6 +705,9 @@ export type Database = {
           deposit_body: string
           deposit_subject: string
           id: string
+          mailgun_api_key: string
+          mailgun_domain: string
+          mailgun_region: string
           notify_deposit: boolean
           notify_settlement: boolean
           notify_signup: boolean
@@ -724,6 +727,9 @@ export type Database = {
           deposit_body?: string
           deposit_subject?: string
           id?: string
+          mailgun_api_key?: string
+          mailgun_domain?: string
+          mailgun_region?: string
           notify_deposit?: boolean
           notify_settlement?: boolean
           notify_signup?: boolean
@@ -743,6 +749,9 @@ export type Database = {
           deposit_body?: string
           deposit_subject?: string
           id?: string
+          mailgun_api_key?: string
+          mailgun_domain?: string
+          mailgun_region?: string
           notify_deposit?: boolean
           notify_settlement?: boolean
           notify_signup?: boolean

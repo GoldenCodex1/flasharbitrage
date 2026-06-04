@@ -13,6 +13,9 @@ interface EmailSettings {
   sender_name: string;
   sender_email: string;
   resend_api_key: string;
+  mailgun_api_key: string;
+  mailgun_domain: string;
+  mailgun_region: string;
   notify_signup: boolean;
   notify_deposit: boolean;
   notify_withdrawal: boolean;
@@ -100,7 +103,7 @@ export default function AdminEmailSettings() {
             <Mail className="w-6 h-6 text-primary" /> Email & Notifications
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure Resend email provider, sender identity, and notification templates.
+            Configure Mailgun email provider, sender identity, and notification templates.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -115,32 +118,65 @@ export default function AdminEmailSettings() {
         </div>
       </div>
 
-      {/* Resend API Key */}
+      {/* Mailgun Provider */}
       <div className="glass-card p-5 sm:p-6 space-y-4">
         <h3 className="font-display font-semibold text-base sm:text-lg flex items-center gap-2">
-          <Key className="w-4 h-4 text-primary" /> Resend API Key
+          <Key className="w-4 h-4 text-primary" /> Mailgun Provider
         </h3>
-        <p className="text-xs text-muted-foreground">Enter your Resend API key to enable email sending. Get one at <a href="https://resend.com" target="_blank" rel="noopener noreferrer" className="text-primary underline">resend.com</a>.</p>
-        <div className="relative max-w-md">
-          <Input
-            type={showApiKey ? "text" : "password"}
-            value={data.resend_api_key}
-            onChange={(e) => update("resend_api_key", e.target.value)}
-            className="bg-secondary/50 border-border/30 text-sm pr-10"
-            placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-          />
-          <button
-            type="button"
-            onClick={() => setShowApiKey(!showApiKey)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-          </button>
+        <p className="text-xs text-muted-foreground">
+          Enter your Mailgun Private API key and verified sending domain. Get them at{" "}
+          <a href="https://app.mailgun.com/" target="_blank" rel="noopener noreferrer" className="text-primary underline">app.mailgun.com</a>.
+        </p>
+
+        <div className="space-y-1.5 max-w-md">
+          <label className="text-xs font-medium text-muted-foreground">Mailgun API Key</label>
+          <div className="relative">
+            <Input
+              type={showApiKey ? "text" : "password"}
+              value={data.mailgun_api_key}
+              onChange={(e) => update("mailgun_api_key", e.target.value)}
+              className="bg-secondary/50 border-border/30 text-sm pr-10"
+              placeholder="key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            />
+            <button
+              type="button"
+              onClick={() => setShowApiKey(!showApiKey)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
-        {!data.resend_api_key && (
-          <p className="text-[10px] text-destructive">⚠ No API key configured — emails will not be sent.</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Sending Domain</label>
+            <Input
+              value={data.mailgun_domain}
+              onChange={(e) => update("mailgun_domain", e.target.value)}
+              className="bg-secondary/50 border-border/30 text-sm"
+              placeholder="mg.yourdomain.com"
+            />
+            <p className="text-[10px] text-muted-foreground/70">Must be a verified domain in Mailgun</p>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Region</label>
+            <select
+              value={data.mailgun_region || "us"}
+              onChange={(e) => update("mailgun_region", e.target.value)}
+              className="w-full h-10 rounded-md bg-secondary/50 border border-border/30 text-sm px-3"
+            >
+              <option value="us">US (api.mailgun.net)</option>
+              <option value="eu">EU (api.eu.mailgun.net)</option>
+            </select>
+          </div>
+        </div>
+
+        {(!data.mailgun_api_key || !data.mailgun_domain) && (
+          <p className="text-[10px] text-destructive">⚠ Mailgun not fully configured — emails will not be sent.</p>
         )}
       </div>
+
 
       {/* Sender Identity */}
       <div className="glass-card p-5 sm:p-6 space-y-4">
@@ -154,7 +190,7 @@ export default function AdminEmailSettings() {
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Sender Email</label>
             <Input value={data.sender_email} onChange={(e) => update("sender_email", e.target.value)} className="bg-secondary/50 border-border/30 text-sm" placeholder="noreply@yourdomain.com" />
-            <p className="text-[10px] text-muted-foreground/70">Must be a verified domain in Resend</p>
+            <p className="text-[10px] text-muted-foreground/70">Must match a verified domain in Mailgun</p>
           </div>
         </div>
       </div>
