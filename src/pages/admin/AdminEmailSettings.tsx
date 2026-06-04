@@ -190,7 +190,7 @@ export default function AdminEmailSettings() {
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Sender Email</label>
             <Input value={data.sender_email} onChange={(e) => update("sender_email", e.target.value)} className="bg-secondary/50 border-border/30 text-sm" placeholder="noreply@yourdomain.com" />
-            <p className="text-[10px] text-muted-foreground/70">Must be a verified domain in Resend</p>
+            <p className="text-[10px] text-muted-foreground/70">Must match a verified domain in Mailgun</p>
           </div>
         </div>
       </div>
