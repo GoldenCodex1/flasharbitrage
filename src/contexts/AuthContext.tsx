@@ -26,6 +26,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  const checkAdmin = async (userId: string) => {
+    try {
+      const { data } = await Promise.race([
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
+          .maybeSingle(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("timeout")), 3000)
+        ),
+      ]);
+      setIsAdmin(!!data);
+    } catch {
+      // keep previous value on transient errors
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -34,23 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Check admin role with timeout to prevent hangs
-          try {
-            const { data } = await Promise.race([
-              supabase
-                .from("user_roles")
-                .select("role")
-                .eq("user_id", session.user.id)
-                .eq("role", "admin")
-                .maybeSingle(),
-              new Promise<never>((_, reject) =>
-                setTimeout(() => reject(new Error("timeout")), 3000)
-              ),
-            ]);
-            setIsAdmin(!!data);
-          } catch {
-            setIsAdmin(false);
-          }
+          await checkAdmin(session.user.id);
         } else {
           setIsAdmin(false);
         }
@@ -64,17 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        Promise.resolve(
-          supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", session.user.id)
-            .eq("role", "admin")
-            .maybeSingle()
-        )
-          .then(({ data }) => setIsAdmin(!!data))
-          .catch(() => setIsAdmin(false))
-          .finally(() => setLoading(false));
+        checkAdmin(session.user.id).finally(() => setLoading(false));
       } else {
         setLoading(false);
       }
@@ -82,6 +75,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Auto-refresh admin status: poll periodically and on window focus / visibility change.
+  // This ensures role grants/revocations take effect without requiring a fresh sign-in.
+  useEffect(() => {
+    if (!user) return;
+    const uid = user.id;
+
+    const interval = setInterval(() => {
+      checkAdmin(uid);
+    }, 30_000);
+
+    const onFocus = () => checkAdmin(uid);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") checkAdmin(uid);
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [user?.id]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -93,3 +111,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
+

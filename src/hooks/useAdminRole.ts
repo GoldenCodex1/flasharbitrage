@@ -63,7 +63,12 @@ export function useAdminRole() {
       if (error) throw error;
       return (data as AdminRole) ?? null;
     },
-    staleTime: 60_000,
+    // Auto-refresh so role grants/revocations propagate without a re-login
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
   return { role: (data ?? null) as AdminRole, loading: isLoading };
 }
+
