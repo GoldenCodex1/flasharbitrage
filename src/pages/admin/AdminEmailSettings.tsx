@@ -105,7 +105,7 @@ export default function AdminEmailSettings() {
             <Mail className="w-6 h-6 text-primary" /> Email & Notifications
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure Mailgun email provider, sender identity, and notification templates.
+            Choose your email provider (Mailgun or Resend), sender identity, and notification templates.
           </p>
         </div>
         <div className="flex items-center gap-2">
