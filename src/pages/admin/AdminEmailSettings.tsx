@@ -43,6 +43,7 @@ export default function AdminEmailSettings() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showResendKey, setShowResendKey] = useState(false);
 
   useEffect(() => {
     loadSettings();
