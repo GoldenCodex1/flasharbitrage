@@ -72,7 +72,7 @@ export function useAdminRole() {
   });
   return {
     role: (data ?? null) as AdminRole,
-    loading: !!user && (isLoading || isFetching || (isPending && data === undefined)),
+    loading: !!user && data === undefined && (isLoading || isFetching || isPending),
   };
 }
 
