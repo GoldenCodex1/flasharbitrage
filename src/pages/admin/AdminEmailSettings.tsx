@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 interface EmailSettings {
   id: string;
+  email_provider: string;
   sender_name: string;
   sender_email: string;
   resend_api_key: string;
