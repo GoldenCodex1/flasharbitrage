@@ -54,21 +54,25 @@ export function canAccessPath(role: AdminRole, path: string): boolean {
 }
 
 export function useAdminRole() {
-  const { user, isAdmin } = useAuth();
-  const { data, isLoading } = useQuery({
+  const { user } = useAuth();
+  const { data, isLoading, isFetching, isPending } = useQuery({
     queryKey: ["current-admin-role", user?.id],
-    enabled: !!user && isAdmin,
+    enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("current_admin_role");
       if (error) throw error;
       return (data as AdminRole) ?? null;
     },
+    retry: 3,
     // Auto-refresh so role grants/revocations propagate without a re-login
     staleTime: 15_000,
     refetchInterval: 30_000,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   });
-  return { role: (data ?? null) as AdminRole, loading: isLoading };
+  return {
+    role: (data ?? null) as AdminRole,
+    loading: !!user && data === undefined && (isLoading || isFetching || isPending),
+  };
 }
 
