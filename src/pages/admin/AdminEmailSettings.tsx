@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 interface EmailSettings {
   id: string;
+  email_provider: string;
   sender_name: string;
   sender_email: string;
   resend_api_key: string;
@@ -42,6 +43,7 @@ export default function AdminEmailSettings() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  const [showResendKey, setShowResendKey] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -103,7 +105,7 @@ export default function AdminEmailSettings() {
             <Mail className="w-6 h-6 text-primary" /> Email & Notifications
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure Mailgun email provider, sender identity, and notification templates.
+            Choose your email provider (Mailgun or Resend), sender identity, and notification templates.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -118,7 +120,35 @@ export default function AdminEmailSettings() {
         </div>
       </div>
 
+      {/* Provider Selector */}
+      <div className="glass-card p-5 sm:p-6 space-y-3">
+        <h3 className="font-display font-semibold text-base sm:text-lg flex items-center gap-2">
+          <Mail className="w-4 h-4 text-primary" /> Email Provider
+        </h3>
+        <p className="text-xs text-muted-foreground">Pick which service actually sends the emails.</p>
+        <div className="grid grid-cols-2 gap-3 max-w-md">
+          {[
+            { val: "mailgun", label: "Mailgun" },
+            { val: "resend", label: "Resend" },
+          ].map((p) => (
+            <button
+              key={p.val}
+              type="button"
+              onClick={() => update("email_provider", p.val)}
+              className={`rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
+                (data.email_provider || "mailgun") === p.val
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/30 bg-secondary/30 text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Mailgun Provider */}
+      {(data.email_provider || "mailgun") === "mailgun" && (
       <div className="glass-card p-5 sm:p-6 space-y-4">
         <h3 className="font-display font-semibold text-base sm:text-lg flex items-center gap-2">
           <Key className="w-4 h-4 text-primary" /> Mailgun Provider
@@ -133,7 +163,7 @@ export default function AdminEmailSettings() {
           <div className="relative">
             <Input
               type={showApiKey ? "text" : "password"}
-              value={data.mailgun_api_key}
+              value={data.mailgun_api_key || ""}
               onChange={(e) => update("mailgun_api_key", e.target.value)}
               className="bg-secondary/50 border-border/30 text-sm pr-10"
               placeholder="key-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
@@ -152,7 +182,7 @@ export default function AdminEmailSettings() {
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">Sending Domain</label>
             <Input
-              value={data.mailgun_domain}
+              value={data.mailgun_domain || ""}
               onChange={(e) => update("mailgun_domain", e.target.value)}
               className="bg-secondary/50 border-border/30 text-sm"
               placeholder="mg.yourdomain.com"
@@ -176,6 +206,45 @@ export default function AdminEmailSettings() {
           <p className="text-[10px] text-destructive">⚠ Mailgun not fully configured — emails will not be sent.</p>
         )}
       </div>
+      )}
+
+      {/* Resend Provider */}
+      {data.email_provider === "resend" && (
+      <div className="glass-card p-5 sm:p-6 space-y-4">
+        <h3 className="font-display font-semibold text-base sm:text-lg flex items-center gap-2">
+          <Key className="w-4 h-4 text-primary" /> Resend Provider
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Enter your Resend API key. Get one at{" "}
+          <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary underline">resend.com/api-keys</a>.
+          Your sender email must be on a domain you've verified in Resend.
+        </p>
+
+        <div className="space-y-1.5 max-w-md">
+          <label className="text-xs font-medium text-muted-foreground">Resend API Key</label>
+          <div className="relative">
+            <Input
+              type={showResendKey ? "text" : "password"}
+              value={data.resend_api_key || ""}
+              onChange={(e) => update("resend_api_key", e.target.value)}
+              className="bg-secondary/50 border-border/30 text-sm pr-10"
+              placeholder="re_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            />
+            <button
+              type="button"
+              onClick={() => setShowResendKey(!showResendKey)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showResendKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {!data.resend_api_key && (
+          <p className="text-[10px] text-destructive">⚠ Resend not configured — emails will not be sent.</p>
+        )}
+      </div>
+      )}
 
 
       {/* Sender Identity */}

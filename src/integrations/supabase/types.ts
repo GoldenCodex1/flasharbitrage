@@ -704,6 +704,7 @@ export type Database = {
         Row: {
           deposit_body: string
           deposit_subject: string
+          email_provider: string
           id: string
           mailgun_api_key: string
           mailgun_domain: string
@@ -726,6 +727,7 @@ export type Database = {
         Insert: {
           deposit_body?: string
           deposit_subject?: string
+          email_provider?: string
           id?: string
           mailgun_api_key?: string
           mailgun_domain?: string
@@ -748,6 +750,7 @@ export type Database = {
         Update: {
           deposit_body?: string
           deposit_subject?: string
+          email_provider?: string
           id?: string
           mailgun_api_key?: string
           mailgun_domain?: string

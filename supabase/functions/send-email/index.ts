@@ -94,53 +94,83 @@ Deno.serve(async (req) => {
       body = body.replace(regex, String(value));
     }
 
-    // Mailgun config
-    const apiKey = (settings.mailgun_api_key || Deno.env.get("MAILGUN_API_KEY") || "").trim();
-    const domain = (settings.mailgun_domain || Deno.env.get("MAILGUN_DOMAIN") || "").trim();
-    const region = (settings.mailgun_region || "us").toLowerCase();
+    const provider = (settings.email_provider || "mailgun").toLowerCase();
+    const fromHeader = `${settings.sender_name} <${settings.sender_email}>`;
+    const htmlBody = body.replace(/\n/g, "<br>");
 
-    if (!apiKey || !domain) {
-      return new Response(
-        JSON.stringify({ error: "Mailgun not configured. Add API key and domain in Admin → Email & Notifications." }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    let sendOk = false;
+    let sendId: string | undefined;
+    let sendStatus = 0;
+    let sendDetails: any = null;
+
+    if (provider === "resend") {
+      const resendKey = (settings.resend_api_key || Deno.env.get("RESEND_API_KEY") || "").trim();
+      if (!resendKey) {
+        return new Response(
+          JSON.stringify({ error: "Resend not configured. Add API key in Admin → Email & Notifications." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const rRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: fromHeader,
+          to: [userData.user.email],
+          subject,
+          html: htmlBody,
+          text: body,
+        }),
+      });
+      const rText = await rRes.text();
+      try { sendDetails = JSON.parse(rText); } catch { sendDetails = { raw: rText }; }
+      sendOk = rRes.ok;
+      sendStatus = rRes.status;
+      sendId = sendDetails?.id;
+    } else {
+      const apiKey = (settings.mailgun_api_key || Deno.env.get("MAILGUN_API_KEY") || "").trim();
+      const domain = (settings.mailgun_domain || Deno.env.get("MAILGUN_DOMAIN") || "").trim();
+      const region = (settings.mailgun_region || "us").toLowerCase();
+      if (!apiKey || !domain) {
+        return new Response(
+          JSON.stringify({ error: "Mailgun not configured. Add API key and domain in Admin → Email & Notifications." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      const host = region === "eu" ? "api.eu.mailgun.net" : "api.mailgun.net";
+      const url = `https://${host}/v3/${domain}/messages`;
+      const form = new URLSearchParams();
+      form.append("from", fromHeader);
+      form.append("to", userData.user.email);
+      form.append("subject", subject);
+      form.append("html", htmlBody);
+      form.append("text", body);
+      const auth = "Basic " + btoa(`api:${apiKey}`);
+      const mgRes = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: auth, "Content-Type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
+      });
+      const mgText = await mgRes.text();
+      try { sendDetails = JSON.parse(mgText); } catch { sendDetails = { raw: mgText }; }
+      sendOk = mgRes.ok;
+      sendStatus = mgRes.status;
+      sendId = sendDetails?.id;
     }
 
-    const host = region === "eu" ? "api.eu.mailgun.net" : "api.mailgun.net";
-    const url = `https://${host}/v3/${domain}/messages`;
-
-    const form = new URLSearchParams();
-    form.append("from", `${settings.sender_name} <${settings.sender_email}>`);
-    form.append("to", userData.user.email);
-    form.append("subject", subject);
-    form.append("html", body.replace(/\n/g, "<br>"));
-    form.append("text", body);
-
-    const auth = "Basic " + btoa(`api:${apiKey}`);
-
-    const mgRes = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: auth,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: form.toString(),
-    });
-
-    const mgText = await mgRes.text();
-    let mgData: any = {};
-    try { mgData = JSON.parse(mgText); } catch { mgData = { raw: mgText }; }
-
-    if (!mgRes.ok) {
-      console.error("Mailgun error:", mgRes.status, mgData);
+    if (!sendOk) {
+      console.error(`${provider} error:`, sendStatus, sendDetails);
       return new Response(
-        JSON.stringify({ error: "Failed to send email", status: mgRes.status, details: mgData }),
+        JSON.stringify({ error: "Failed to send email", provider, status: sendStatus, details: sendDetails }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     return new Response(
-      JSON.stringify({ success: true, id: mgData.id }),
+      JSON.stringify({ success: true, provider, id: sendId }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
