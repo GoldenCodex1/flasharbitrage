@@ -26,19 +26,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  const checkAdmin = async (userId: string) => {
+  const checkAdmin = async (_userId: string) => {
     try {
-      const { data } = await Promise.race([
-        supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .eq("role", "admin")
-          .maybeSingle(),
+      const { data, error } = await Promise.race([
+        supabase.rpc("current_admin_role"),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("timeout")), 3000)
         ),
       ]);
+      if (error) throw error;
       setIsAdmin(!!data);
     } catch {
       // keep previous value on transient errors
