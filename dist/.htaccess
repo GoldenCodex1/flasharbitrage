@@ -1,0 +1,13 @@
+AddType text/javascript .js .mjs .jsx .tsx
+AddType application/wasm .wasm
+AddType text/css .css
+AddType application/json .json
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
