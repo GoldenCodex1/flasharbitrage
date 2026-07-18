@@ -1,0 +1,1 @@
+CREATE POLICY "Anyone can read min_auto_deposit" ON public.system_financial_rules FOR SELECT TO authenticated USING (true);

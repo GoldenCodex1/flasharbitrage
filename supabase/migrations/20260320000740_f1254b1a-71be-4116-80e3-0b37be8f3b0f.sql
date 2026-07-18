@@ -1,0 +1,2 @@
+ALTER TABLE public.bot_activity ADD COLUMN IF NOT EXISTS capital_allocation numeric NOT NULL DEFAULT 0;
+ALTER TABLE public.bot_activity ADD COLUMN IF NOT EXISTS max_per_trade_percent numeric NOT NULL DEFAULT 25;
