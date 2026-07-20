@@ -40,9 +40,18 @@ export default function AdminKyc() {
     },
   });
 
-  const getDocUrl = (path: string) => {
-    return supabase.storage.from("kyc-documents").getPublicUrl(path).data.publicUrl;
-  };
+  const getDocUrl = async (path: string) => {
+  const { data, error } = await supabase.storage
+    .from("kyc-documents")
+    .createSignedUrl(path, 60 * 60);
+
+  if (error) {
+    toast.error(error.message);
+    return null;
+  }
+
+  return data.signedUrl;
+};
 
   const handleAction = async (kycId: string, userId: string, status: "approved" | "rejected") => {
     setActionLoading(kycId);
@@ -135,7 +144,15 @@ export default function AdminKyc() {
               <div className="flex gap-3 flex-wrap">
                 {kyc.document_url && (
                   <button
-                    onClick={() => setViewingDoc({ url: getDocUrl(kyc.document_url!), title: "Document" })}
+                    onClick={async () => {
+  const url = await getDocUrl(kyc.document_url!);
+  if (!url) return;
+
+  setViewingDoc({
+    url,
+    title: "Document",
+  });
+}}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary hover:bg-secondary/80 transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" /> View Document
@@ -143,7 +160,15 @@ export default function AdminKyc() {
                 )}
                 {kyc.selfie_url && (
                   <button
-                    onClick={() => setViewingDoc({ url: getDocUrl(kyc.selfie_url!), title: "Selfie" })}
+                    onClick={async () => {
+  const url = await getDocUrl(kyc.document_url!);
+  if (!url) return;
+
+  setViewingDoc({
+    url,
+    title: "Document",
+  });
+}}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary hover:bg-secondary/80 transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" /> View Selfie
