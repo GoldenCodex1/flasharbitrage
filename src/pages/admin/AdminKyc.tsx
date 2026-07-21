@@ -143,21 +143,20 @@ export default function AdminKyc() {
 
               <div className="flex gap-3 flex-wrap">
                 {kyc.document_url && (
-                  <button
-                    onClick={async () => {
-onClick={async () => {
-  const url = await getDocUrl(kyc.document_url!);
+                <button
+  onClick={async () => {
+    const url = await getDocUrl(kyc.document_url!);
 
-  if (!url) return;
+    if (!url) return;
 
-  setViewingDoc({
-    url,
-    title: "Document",
-  });
-}}
-className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary hover:bg-secondary/80 transition-colors"
+    setViewingDoc({
+      url,
+      title: "Document",
+    });
+  }}
+  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-secondary hover:bg-secondary/80 transition-colors"
 >
-  <Eye className="w-3.5 w-3.5" /> View Document
+  <Eye className="w-3.5 h-3.5" /> View Document
 </button>
 )}
 {kyc.selfie_url && (
