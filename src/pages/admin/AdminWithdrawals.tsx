@@ -116,12 +116,38 @@ export default function AdminWithdrawals() {
     const result = data as unknown as { success: boolean; error?: string };
     if (!result.success) { toast.error(result.error ?? "Approval failed"); return; }
     toast.success("Withdrawal approved — balance deducted from user ledger");
-    invalidate();
-    queryClient.invalidateQueries({ queryKey: ["admin-withdrawal-balance"] });
+
+const withdrawal = withdrawals?.find((x) => x.id === id);
+
+
+if (withdrawal?.user_id) {
+  const { error: notificationError } = await supabase
+    .from("notifications")
+    .insert({
+      user_id: withdrawal.user_id,
+      title: "Withdrawal Approved",
+      message: `Your withdrawal of $${withdrawal.amount} has been approved and is being processed.`,
+      type: "success",
+    });
+
+  if (notificationError) {
+    console.error("APPROVAL NOTIFICATION ERROR:", notificationError);
+  } else {
+    console.log("APPROVAL NOTIFICATION SENT");
+  }
+} else {
+  console.error("NO WITHDRAWAL DATA FOUND FOR NOTIFICATION:", id);
+}
+
+invalidate();
+queryClient.invalidateQueries({ queryKey: ["admin-withdrawal-balance"] });
   };
 
   const handleStatusChange = async (id: string, newStatus: string, extra?: Record<string, unknown>) => {
     const w = withdrawals?.find((x) => x.id === id);
+
+console.log("WITHDRAWAL DATA:", w);
+console.log("NEW STATUS:", newStatus);
     const { data: { user } } = await supabase.auth.getUser();
     const updates: Record<string, unknown> = {
       status: newStatus,
@@ -129,11 +155,66 @@ export default function AdminWithdrawals() {
       ...extra,
     };
     const { error } = await supabase.from("withdrawals").update(updates).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    await logAction(id, `status_${newStatus}`, w?.status, newStatus);
-    toast.success(`Withdrawal ${newStatus}`);
-    invalidate();
-  };
+
+if (error) { 
+  toast.error(error.message); 
+  return; 
+}
+
+// Send notification to user
+if (w?.user_id) {
+  let title = "";
+  let message = "";
+  let type = "info";
+
+  if (newStatus === "approved") {
+    title = "Withdrawal Approved";
+    message = `Your withdrawal of $${w.amount} has been approved and is being processed.`;
+    type = "success";
+  }
+
+  if (newStatus === "paid") {
+    title = "Withdrawal Paid";
+    message = `Your withdrawal of $${w.amount} has been sent successfully.`;
+    type = "success";
+  }
+
+  if (newStatus === "rejected") {
+    title = "Withdrawal Rejected";
+    message = `Your withdrawal request of $${w.amount} has been rejected.`;
+    type = "warning";
+  }
+
+  // ADD THIS HERE
+  if (newStatus === "completed") {
+    title = "Withdrawal Completed";
+    message = `Your withdrawal of $${w.amount} has been completed successfully.`;
+    type = "success";
+  }
+
+  if (title) {
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: w.user_id,
+        title,
+        message,
+        type,
+      });
+
+    if (notificationError) {
+      console.error("WITHDRAWAL NOTIFICATION ERROR:", notificationError);
+    } else {
+      console.log("WITHDRAWAL NOTIFICATION SENT");
+    }
+  }
+
+} // closes if (w?.user_id)
+
+await logAction(id, `status_${newStatus}`, w?.status, newStatus);
+toast.success(`Withdrawal ${newStatus}`);
+invalidate();
+};
 
   const handleMarkPaid = async () => {
     if (!selectedId || !txInput.trim()) { toast.error("Transaction hash is required"); return; }
