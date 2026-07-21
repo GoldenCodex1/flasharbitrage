@@ -175,13 +175,13 @@ Deno.serve(async (req) => {
         if (jr && !jr.success) {
           // If plan/balance limit hit, auto-disable bot
           if (jr.error?.includes("limit") || jr.error?.includes("balance") || jr.error?.includes("slot")) {
-            await supabase.from("bot_activity").update({ bot_enabled: false }).eq("user_id", bot.user_id);
-            await supabase.from("notifications").insert({
-              user_id: bot.user_id,
-              title: "Auto Bot Paused",
-              message: `Bot paused: ${jr.error}`,
-              type: "warning",
-            });
+           results.push({
+  user_id: bot.user_id,
+  action: "join_rejected",
+  error: jr.error,
+});
+
+continue;
           }
           results.push({ user_id: bot.user_id, action: "join_rejected", error: jr.error });
           continue;

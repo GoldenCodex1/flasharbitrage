@@ -44,6 +44,9 @@ export default function NotificationBell() {
   });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+  console.log("Notifications:", notifications);
+  console.log("Open:", open);
+  console.log("Unread:", unreadCount);
 
   const markRead = useMutation({
     mutationFn: async (id: string) => {

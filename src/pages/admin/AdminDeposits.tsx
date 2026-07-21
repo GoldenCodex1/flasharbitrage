@@ -23,30 +23,48 @@ export default function AdminDeposits() {
     },
   });
 
-  const handleAction = async (id: string, action: "approved" | "rejected") => {
-    const updates: Record<string, string> = { status: action };
-    if (noteId === id && noteText) updates.admin_note = noteText;
-    const { error } = await supabase.from("deposits").update(updates).eq("id", id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success(`Deposit ${action}`);
-      setNoteId(null);
-      setNoteText("");
-      queryClient.invalidateQueries({ queryKey: ["admin-deposits"] });
-    }
-  };
+ const handleAction = async (id: string, action: "approved" | "rejected") => {
+  const updates: Record<string, string> = { status: action };
+  if (noteId === id && noteText) updates.admin_note = noteText;
 
-  const handleSaveNote = async (id: string) => {
-    const { error } = await supabase.from("deposits").update({ admin_note: noteText }).eq("id", id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Note saved");
-      setNoteId(null);
-      setNoteText("");
-      queryClient.invalidateQueries({ queryKey: ["admin-deposits"] });
-    }
-  };
+  // Get the deposit first so we know which user to notify
+  const { data: deposit } = await supabase
+    .from("deposits")
+    .select("*")
+    .eq("id", id)
+    .single();
 
+  // Update the deposit
+  const { error } = await supabase
+    .from("deposits")
+    .update(updates)
+    .eq("id", id);
+
+  if (error) {
+    toast.error(error.message);
+    return;
+  }
+
+  // Create notification
+  if (deposit) {
+    await supabase.from("notifications").insert({
+      user_id: deposit.user_id,
+      title: action === "approved"
+        ? "Deposit Approved"
+        : "Deposit Rejected",
+      message: action === "approved"
+        ? `Your deposit of $${deposit.amount} has been approved.`
+        : `Your deposit of $${deposit.amount} has been rejected.`,
+      type: action === "approved" ? "success" : "error",
+      read: false,
+    });
+  }
+
+  toast.success(`Deposit ${action}`);
+  setNoteId(null);
+  setNoteText("");
+  queryClient.invalidateQueries({ queryKey: ["admin-deposits"] });
+};
   const fmt = (n: number) => "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2 });
 
   return (
