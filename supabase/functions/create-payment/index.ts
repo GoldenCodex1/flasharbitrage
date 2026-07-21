@@ -48,19 +48,34 @@ Deno.serve(async (req) => {
     }
 
     // Get NOWPayments API key
-    const { data: gw } = await supabase
-      .from("api_gateways")
-      .select("id, provider_name")
-      .ilike("provider_name", "%nowpayment%")
-      .eq("active", true)
-      .maybeSingle();
+    const { data: gw, error: gwError } = await supabase
+  .from("api_gateways")
+  .select("id, provider_name, active")
+  .ilike("provider_name", "%nowpayment%")
+  .eq("active", true)
+  .maybeSingle();
 
-    if (!gw) {
-      return new Response(JSON.stringify({ error: "Payment gateway not active" }), {
-        status: 503,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+if (gwError) {
+  console.error("Gateway query failed:", gwError);
+
+  return new Response(
+    JSON.stringify({ error: "Internal server error" }),
+    {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     }
+  );
+}
+
+if (!gw) {
+  return new Response(
+    JSON.stringify({ error: "Payment gateway not active" }),
+    {
+      status: 503,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    }
+  );
+}
 
     const { data: creds } = await supabase
       .from("api_credentials")
